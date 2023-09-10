@@ -1,0 +1,89 @@
+[tool.poetry]
+name = "rusty_logger"
+version = "1.0.0"
+description = "Rust-based python logger"
+authors = ["Thorrester <48217609+thorrester@users.noreply.github.com>"]
+
+[tool.poetry.dependencies]
+# required dependencies
+python = ">=3.9,<3.12"
+
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.1.2"
+ruff = "^0.0.242"
+mypy = "^1"
+black = "22.3.0"
+
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+line-length = 120
+target-version = ['py310']
+include = '\.pyi?$'
+
+[tool.pylint.MASTER]
+load-plugins = ["pylint.extensions.docparams"]
+
+[tool.pylint.messages_control]
+max-line-length = 120
+disable = [
+    "too-few-public-methods",
+    "design",
+    "duplicate-code",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "too-many-nested-blocks",
+    "unused-argument",
+    "fixme",
+    "import-outside-toplevel"
+]
+
+
+[tool.flake8]
+# This section is just a doc placeholder..see setup.cfg
+max-complexity = 10
+format = "pylint"
+statistics = "True"
+max-line-length = 125
+# ignore non-PEP8 lints
+ignore = ["E203", "W503", "W0511"]
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+testpaths = ["tests"]
+
+
+[tool.mypy]
+# platform configuration
+python_version = "3.9"
+platform = "linux"
+mypy_path = "stubs"
+ignore_missing_imports = true
+plugins = [
+    "numpy.typing.mypy_plugin",
+]
+
+[build-system]
+requires = ["maturin>=1.2,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "rusty-logger"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
