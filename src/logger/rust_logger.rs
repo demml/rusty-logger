@@ -37,23 +37,16 @@ impl LogConfig {
         level: Option<String>,
         env: Option<String>,
     ) -> LogConfig {
-        let log_level = match level {
-            Some(val) => val,
-            None => "INFO".to_string(),
-        };
-
-        let log_env = match env {
-            Some(val) => val,
-            None => match env::var("APP_ENV") {
-                Ok(val) => val,
-                Err(_e) => "development".to_string(),
-            },
-        };
+        let log_level = level.unwrap_or_else(|| "INFO".to_string());
+        let log_env = env.unwrap_or_else(|| match env::var("APP_ENV") {
+            Ok(val) => val,
+            Err(_e) => "development".to_string(),
+        });
 
         LogConfig {
             stdout: stdout.unwrap_or(true),
             stderr: stderr.unwrap_or(false),
-            filename: filename,
+            filename,
             level: log_level,
             env: Some(log_env),
         }
@@ -79,6 +72,7 @@ fn get_file_name<T: Into<String>>(name: Option<T>) -> String {
         .to_string()
 }
 
+#[allow(clippy::single_char_pattern)]
 fn get_log_directory(output: &str) -> String {
     let file_splits = output.split("/").to_owned().collect::<Vec<&str>>().clone();
     let directory = file_splits[..file_splits.len() - 1].join("/");
@@ -98,6 +92,8 @@ fn get_log_directory(output: &str) -> String {
 /// * `level` - The level of the logger. Either "info", "debug", "warn", or "error"
 /// * `name` - The name of the file
 ///
+///
+#[allow(dead_code)]
 pub struct JsonLogger {
     pub env: String,
     pub name: String,
@@ -105,6 +101,15 @@ pub struct JsonLogger {
 }
 
 impl JsonLogger {
+    /// Build the layers for the logger
+    ///
+    /// # Arguments
+    ///
+    /// * `log_config` - The configuration for the logger
+    ///
+    /// # Returns
+    ///
+    /// * `Vec<Box<dyn Layer<S> + Send + Sync>>` - The layers for the logger
     fn build_layers<S>(log_config: &LogConfig) -> Vec<Box<dyn Layer<S> + Send + Sync>>
     where
         S: tracing_core::Subscriber,
@@ -168,7 +173,7 @@ impl JsonLogger {
                 "ERROR" => LevelFilter::ERROR.into(),
                 _ => LevelFilter::INFO.into(),
             });
-        let gaurd = tracing_subscriber::registry()
+        let guard = tracing_subscriber::registry()
             .with(layers)
             .with(global_filter)
             .set_default();
@@ -181,7 +186,7 @@ impl JsonLogger {
                 Err(_e) => "development".to_string(),
             },
             name: file_name,
-            guard: gaurd,
+            guard,
         }
     }
 
@@ -191,7 +196,7 @@ impl JsonLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn info(&self, message: &str) -> () {
+    pub fn info(&self, message: &str) {
         tracing::info!(message = message, app_env = self.env, name = self.name);
     }
 
@@ -201,7 +206,7 @@ impl JsonLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn debug(&self, message: &str) -> () {
+    pub fn debug(&self, message: &str) {
         tracing::debug!(message = message, app_env = self.env, name = self.name);
     }
 
@@ -211,7 +216,7 @@ impl JsonLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn warning(&self, message: &str) -> () {
+    pub fn warning(&self, message: &str) {
         tracing::warn!(message = message, app_env = self.env, name = self.name);
     }
 
@@ -221,7 +226,7 @@ impl JsonLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn error(&self, message: &str) -> () {
+    pub fn error(&self, message: &str) {
         tracing::error!(message = message, app_env = self.env, name = self.name);
     }
 }

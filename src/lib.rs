@@ -1,7 +1,7 @@
 mod logger;
 
-use crate::logger::logger::LogConfig;
 use crate::logger::pylogger::PyJsonLogger;
+use crate::logger::rust_logger::LogConfig;
 use pyo3::prelude::*;
 
 /// Python implementation for the Rusty Logger

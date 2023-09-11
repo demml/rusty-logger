@@ -8,23 +8,23 @@ class LogConfig:
         level: str = "INFO",
         filename: Optional[str] = None,
         env: Optional[str] = None,
-    ): ...
+    ):
+        """Creates logger configuration
 
-    """Creates logger configuration
-    
-    Args:
-        stdout:
-            Whether to log to stdout.
-        stderr:
-            Whether to log to stderr.
-        level:
-            The level to log at.
-        filename:
-            The path to the file to log to.
-        env:
-            The environment variable to use to override the log level.
-        
-    """
+        Args:
+            stdout:
+                Whether to log to stdout.
+            stderr:
+                Whether to log to stderr.
+            level:
+                The level to log at.
+            filename:
+                Optional name of log file to write to. Can be a path (logs/test.log) or just a name (test.log).
+            env:
+                The environment name to associate with logs. Defaults to "development"
+
+        """
+        ...
 
 class JsonLogger:
     @classmethod

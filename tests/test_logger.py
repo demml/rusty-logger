@@ -81,3 +81,19 @@ def test_error_logger_file():
             count = count + 1
     assert count == 1
     shutil.rmtree("log", ignore_errors=False)
+
+
+def test_modules():
+    from tests.mod_one import TestOne
+    from tests.mod_two import TestTwo
+
+    TestOne.test_logger()
+    TestTwo.test_logger()
+
+    for name in glob.glob(f"log/test.log*"):
+        with open(name, "r") as fp:
+            for count, line in enumerate(fp):
+                pass
+            count = count + 1
+    assert count == 2
+    shutil.rmtree("log", ignore_errors=False)
