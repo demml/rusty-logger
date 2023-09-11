@@ -20,6 +20,8 @@ lints.ci: lints.format_check lints.ruff lints.mypy
 
 setup.project:
 	poetry install --all-extras --with dev
+	pip install maturin
+	maturin develop
 
 test.unit:
 	poetry run pytest \
