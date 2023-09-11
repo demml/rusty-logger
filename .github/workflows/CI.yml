@@ -69,8 +69,21 @@ jobs:
           python-version: '3.11'
           cache: 'poetry'
 
-      - run : make setup.project
-      - run : make test.unit
+      - name: Create virtual environment
+        run: |
+          python -m venv .venv
+          echo "$GITHUB_WORKSPACE/rusty-logger/.venv/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run : make setup.project
+
+      - name: Install Rusty Logger
+        run: |
+          source activate
+          make setup.project
+      
+      - name: Run tests and report coverage
+        run: make test.unit
   
         env:
           RUST_BACKTRACE: 1
