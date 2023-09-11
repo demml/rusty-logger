@@ -11,4 +11,5 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 pyo3 = "0.19.0"
 tracing = "0.1.37"
+tracing-appender = "0.2.2"
 tracing-subscriber = {version = "0.3.17", features = ["json"]}

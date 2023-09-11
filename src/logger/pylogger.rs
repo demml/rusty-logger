@@ -19,6 +19,7 @@ impl PyJsonLogger {
         let logger = JsonLogger::new(
             output.unwrap_or("stdout".to_string()),
             level.unwrap_or("info".to_string()),
+            name,
         );
 
         PyJsonLogger { logger: logger }
@@ -33,7 +34,7 @@ impl PyJsonLogger {
     }
 
     pub fn warning(&self, message: &str) -> () {
-        self.logger.warn(message);
+        self.logger.warning(message);
     }
 
     pub fn error(&self, message: &str) -> () {

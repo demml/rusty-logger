@@ -228,17 +228,6 @@ tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
-name = "python-json-logger"
-version = "2.0.7"
-description = "A python library adding a json log formatter"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "python-json-logger-2.0.7.tar.gz", hash = "sha256:23e7ec02d34237c5aa1e29a070193a4ea87583bb4e7f8fd06d3de8264c4b2e1c"},
-    {file = "python_json_logger-2.0.7-py3-none-any.whl", hash = "sha256:f380b826a991ebbe3de4d897aeec42760035ac760345e57b812938dc8b35e2bd"},
-]
-
-[[package]]
 name = "ruff"
 version = "0.0.242"
 description = "An extremely fast Python linter, written in Rust."
@@ -288,4 +277,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "12031d73dd5be6d2e2f93f4a3f2dd052bb657a467da06aac32b3c3e1e18819f7"
+content-hash = "523f2f0cf99caba34d8e7862d3feb51be8944c86283eaaf0b70d58c7f95ff915"
