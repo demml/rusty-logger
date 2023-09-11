@@ -1,10 +1,10 @@
-from typing import Any, Optional, Bool
+from typing import Any, Optional
 
 class LogConfig:
     def __init__(
         self,
-        stdout: Bool = True,
-        stderr: Bool = False,
+        stdout: bool = True,
+        stderr: bool = False,
         level: str = "INFO",
         filename: Optional[str] = None,
         env: Optional[str] = None,
@@ -19,7 +19,8 @@ class LogConfig:
             level:
                 The level to log at.
             filename:
-                Optional name of log file to write to. Can be a path (logs/test.log) or just a name (test.log).
+                Optional name of log file to write to. Can be a path (logs/test.log)
+                or just a name (test.log).
             env:
                 The environment name to associate with logs. Defaults to "development"
 
@@ -28,7 +29,11 @@ class LogConfig:
 
 class JsonLogger:
     @classmethod
-    def get_logger(cls, name: str, config: Optional[LogConfig] = None) -> "JsonLogger":
+    def get_logger(
+        cls,
+        name: str,
+        config: Optional[LogConfig] = None,
+    ) -> "JsonLogger":
         """Gets a logger with the given name. If output is None, the logger will log to stdout.
 
         Args:
