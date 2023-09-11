@@ -20,9 +20,9 @@ impl JsonLogger {
             .with_current_span(false);
 
         if output == "stdout" {
-            tracer.with_writer(io::stdout).init();
+            tracer.with_writer(io::stdout).try_init().unwrap_or(());
         } else {
-            tracer.with_writer(io::stderr).init();
+            tracer.with_writer(io::stderr).try_init().unwrap_or(());
         }
 
         Self {
@@ -50,10 +50,10 @@ impl JsonLogger {
 
 #[cfg(test)]
 mod tests {
+    use super::JsonLogger;
 
     #[test]
     fn test_stdout_logger() {
-        use super::JsonLogger;
         let logger = JsonLogger::new("stdout".to_string(), "info".to_string());
         logger.info("test");
         logger.debug("test");
@@ -63,7 +63,6 @@ mod tests {
 
     #[test]
     fn test_stderr_logger() {
-        use super::JsonLogger;
         let logger = JsonLogger::new("stderr".to_string(), "info".to_string());
         logger.info("test");
         logger.debug("test");
