@@ -1,4 +1,0 @@
-{"timestamp":"2023-09-11T14:35:58.193015Z","level":"INFO","fields":{"message":"test info","app_env":"development","name":"test_logger.py"}}
-{"timestamp":"2023-09-11T14:35:58.193121Z","level":"DEBUG","fields":{"message":"test debug","app_env":"development","name":"test_logger.py"}}
-{"timestamp":"2023-09-11T14:35:58.193154Z","level":"WARN","fields":{"message":"test warning","app_env":"development","name":"test_logger.py"}}
-{"timestamp":"2023-09-11T14:35:58.193180Z","level":"ERROR","fields":{"message":"test error","app_env":"development","name":"test_logger.py"}}

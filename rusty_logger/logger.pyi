@@ -1,17 +1,41 @@
-from typing import Any, Optional
+from typing import Any, Optional, Bool
+
+class LogConfig:
+    def __init__(
+        self,
+        stdout: Bool = True,
+        stderr: Bool = False,
+        level: str = "INFO",
+        filename: Optional[str] = None,
+        env: Optional[str] = None,
+    ): ...
+
+    """Creates logger configuration
+    
+    Args:
+        stdout:
+            Whether to log to stdout.
+        stderr:
+            Whether to log to stderr.
+        level:
+            The level to log at.
+        filename:
+            The path to the file to log to.
+        env:
+            The environment variable to use to override the log level.
+        
+    """
 
 class JsonLogger:
     @classmethod
-    def get_logger(cls, name: str, output: Optional[str] = None, level: Optional[str] = None) -> "JsonLogger":
+    def get_logger(cls, name: str, config: Optional[LogConfig] = None) -> "JsonLogger":
         """Gets a logger with the given name. If output is None, the logger will log to stdout.
 
         Args:
             name:
                 The name of the logger. Usually this is the name of the module that is using the logger.
-            output:
-                The path to the file to log to. If None, the logger will log to stdout.
-            level:
-                The level of the logger. If None, the logger will log at the INFO level.
+            config:
+                The configuration for the logger.
 
         Returns:
             A `JsonLogger` instance.

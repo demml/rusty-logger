@@ -1,4 +1,4 @@
-use crate::logger::logger::JsonLogger;
+use crate::logger::logger::{JsonLogger, LogConfig};
 use pyo3::prelude::*;
 use pyo3::types::PyType;
 
@@ -13,14 +13,15 @@ impl PyJsonLogger {
     pub fn get_logger(
         cls: &PyType,
         name: Option<String>,
-        output: Option<String>,
-        level: Option<String>,
+        config: Option<LogConfig>,
     ) -> PyJsonLogger {
-        let logger = JsonLogger::new(
-            output.unwrap_or("stdout".to_string()),
-            level.unwrap_or("info".to_string()),
-            name,
-        );
+        let log_config = if config.is_none() {
+            LogConfig::new(None, None, None, None, None) // use default values
+        } else {
+            config.unwrap()
+        };
+
+        let logger = JsonLogger::new(log_config, name);
 
         PyJsonLogger { logger: logger }
     }
