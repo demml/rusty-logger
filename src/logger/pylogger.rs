@@ -32,7 +32,7 @@ impl PyJsonLogger {
         self.logger.debug(message);
     }
 
-    pub fn warn(&self, message: &str) -> () {
+    pub fn warning(&self, message: &str) -> () {
         self.logger.warn(message);
     }
 

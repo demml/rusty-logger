@@ -1,8 +1,10 @@
+use std::env;
 use std::io;
 
 pub struct JsonLogger {
     pub output: String,
     pub level: String,
+    pub env: String,
 }
 
 impl JsonLogger {
@@ -28,23 +30,27 @@ impl JsonLogger {
         Self {
             output: output,
             level: level,
+            env: match env::var("APP_ENV") {
+                Ok(val) => val,
+                Err(_e) => "development".to_string(),
+            },
         }
     }
 
     pub fn info(&self, message: &str) -> () {
-        tracing::info!("{}", message);
+        tracing::info!(message = message, app_env = self.env);
     }
 
     pub fn debug(&self, message: &str) -> () {
-        tracing::debug!("{}", message);
+        tracing::debug!(message = message, app_env = self.env);
     }
 
     pub fn warn(&self, message: &str) -> () {
-        tracing::warn!("{}", message);
+        tracing::warn!(message = message, app_env = self.env);
     }
 
     pub fn error(&self, message: &str) -> () {
-        tracing::error!("{}", message);
+        tracing::error!(message = message, app_env = self.env);
     }
 }
 
