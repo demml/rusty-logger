@@ -76,11 +76,6 @@ jobs:
 
       - name: Install dependencies
         run : make setup.project
-
-      - name: Install Rusty Logger
-        run: |
-          source activate
-          make setup.project
       
       - name: Run tests and report coverage
         run: make test.unit
