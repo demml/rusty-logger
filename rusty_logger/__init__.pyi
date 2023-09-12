@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Optional, Dict
 
 class LogConfig:
     def __init__(
@@ -27,6 +27,16 @@ class LogConfig:
         """
         ...
 
+class LogMetadata:
+    def __init__(self, info: Dict[str, str]):
+        """Creates logger metadata
+
+        Args:
+            init:
+                The metadata to associate with logs.
+        """
+        ...
+
 class JsonLogger:
     @classmethod
     def get_logger(
@@ -46,7 +56,7 @@ class JsonLogger:
             A `JsonLogger` instance.
         """
         ...
-    def info(self, message: str) -> None:
+    def info(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
         """Logs a message at the INFO level.
 
         Args:
@@ -54,7 +64,7 @@ class JsonLogger:
                 The message to log.
         """
         ...
-    def debug(self, message: str) -> None:
+    def debug(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
         """Logs a message at the DEBUG level.
 
         Args:
@@ -62,7 +72,7 @@ class JsonLogger:
                 The message to log.
         """
         ...
-    def warning(self, message: str) -> None:
+    def warning(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
         """Logs a message at the WARNING level.
 
         Args:
@@ -70,7 +80,7 @@ class JsonLogger:
                 The message to log.
         """
         ...
-    def error(self, message: str, **kwargs: Any) -> None:
+    def error(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
         """Logs a message at the ERROR level.
 
         Args:

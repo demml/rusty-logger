@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::env;
 use std::io;
 use std::path::Path;
@@ -25,6 +26,12 @@ pub struct LogConfig {
 
     #[pyo3(get, set)]
     pub env: Option<String>,
+
+    #[pyo3(get, set)]
+    pub target: bool,
+
+    #[pyo3(get, set)]
+    pub span: bool,
 }
 
 #[pymethods]
@@ -36,6 +43,8 @@ impl LogConfig {
         filename: Option<String>,
         level: Option<String>,
         env: Option<String>,
+        target: Option<bool>,
+        span: Option<bool>,
     ) -> LogConfig {
         let log_level = level.unwrap_or_else(|| "INFO".to_string());
         let log_env = env.unwrap_or_else(|| match env::var("APP_ENV") {
@@ -43,13 +52,33 @@ impl LogConfig {
             Err(_e) => "development".to_string(),
         });
 
+        let log_target = target.unwrap_or(false);
+        let log_span = span.unwrap_or(false);
+
         LogConfig {
             stdout: stdout.unwrap_or(true),
             stderr: stderr.unwrap_or(false),
             filename,
             level: log_level,
             env: Some(log_env),
+            target: log_target,
+            span: log_span,
         }
+    }
+}
+
+#[pyclass]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LogMetadata {
+    #[pyo3(get, set)]
+    pub info: HashMap<String, String>,
+}
+
+#[pymethods]
+impl LogMetadata {
+    #[new]
+    pub fn new(info: HashMap<String, String>) -> LogMetadata {
+        LogMetadata { info }
     }
 }
 
@@ -119,9 +148,9 @@ impl JsonLogger {
 
         if log_config.stdout {
             let layer: Box<dyn Layer<S> + Send + Sync> = tracing_subscriber::fmt::layer()
-                .with_target(false)
+                .with_target(log_config.target)
                 .json()
-                .with_current_span(false)
+                .with_current_span(log_config.span)
                 .with_writer(io::stdout)
                 .boxed();
 
@@ -130,9 +159,9 @@ impl JsonLogger {
 
         if log_config.stderr {
             let layer = tracing_subscriber::fmt::layer()
-                .with_target(false)
+                .with_target(log_config.target)
                 .json()
-                .with_current_span(false)
+                .with_current_span(log_config.span)
                 .with_writer(io::stderr)
                 .boxed();
             layers.push(layer);
@@ -145,8 +174,8 @@ impl JsonLogger {
             let file_appender = tracing_appender::rolling::hourly(directory, file_name_prefix);
             let layer = tracing_subscriber::fmt::layer()
                 .json()
-                .with_target(false)
-                .with_current_span(false)
+                .with_target(log_config.target)
+                .with_current_span(log_config.span)
                 .with_writer(file_appender)
                 .boxed();
             layers.push(layer);
@@ -196,8 +225,16 @@ impl JsonLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn info(&self, message: &str) {
-        tracing::info!(message = message, app_env = self.env, name = self.name);
+    pub fn info(&self, message: &str, metadata: Option<LogMetadata>) {
+        match metadata {
+            Some(val) => tracing::info!(
+                message = message,
+                app_env = self.env,
+                name = self.name,
+                info = ?val.info
+            ),
+            None => tracing::info!(message = message, app_env = self.env, name = self.name),
+        };
     }
 
     /// Log a debug message
@@ -206,8 +243,16 @@ impl JsonLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn debug(&self, message: &str) {
-        tracing::debug!(message = message, app_env = self.env, name = self.name);
+    pub fn debug(&self, message: &str, metadata: Option<LogMetadata>) {
+        match metadata {
+            Some(val) => tracing::debug!(
+                message = message,
+                app_env = self.env,
+                name = self.name,
+                info = ?val.info
+            ),
+            None => tracing::debug!(message = message, app_env = self.env, name = self.name),
+        };
     }
 
     /// Log a warning message
@@ -216,8 +261,16 @@ impl JsonLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn warning(&self, message: &str) {
-        tracing::warn!(message = message, app_env = self.env, name = self.name);
+    pub fn warning(&self, message: &str, metadata: Option<LogMetadata>) {
+        match metadata {
+            Some(val) => tracing::warn!(
+                message = message,
+                app_env = self.env,
+                name = self.name,
+                info = ?val.info
+            ),
+            None => tracing::warn!(message = message, app_env = self.env, name = self.name),
+        };
     }
 
     /// Log an error message
@@ -226,8 +279,16 @@ impl JsonLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn error(&self, message: &str) {
-        tracing::error!(message = message, app_env = self.env, name = self.name);
+    pub fn error(&self, message: &str, metadata: Option<LogMetadata>) {
+        match metadata {
+            Some(val) => tracing::error!(
+                message = message,
+                app_env = self.env,
+                name = self.name,
+                info = ?val.info
+            ),
+            None => tracing::error!(message = message, app_env = self.env, name = self.name),
+        };
     }
 }
 
@@ -243,12 +304,14 @@ mod tests {
             filename: None,
             level: "INFO".to_string(),
             env: None,
+            target: false,
+            span: false,
         };
         let logger = JsonLogger::new(config, None);
-        logger.info("test");
-        logger.debug("test");
-        logger.warning("test");
-        logger.error("test");
+        logger.info("test", None);
+        logger.debug("test", None);
+        logger.warning("test", None);
+        logger.error("test", None);
     }
 
     #[test]
@@ -259,11 +322,13 @@ mod tests {
             filename: None,
             level: "INFO".to_string(),
             env: None,
+            target: false,
+            span: false,
         };
         let logger = JsonLogger::new(config, None);
-        logger.info("test");
-        logger.debug("test");
-        logger.warning("test");
-        logger.error("test");
+        logger.info("test", None);
+        logger.debug("test", None);
+        logger.warning("test", None);
+        logger.error("test", None);
     }
 }
