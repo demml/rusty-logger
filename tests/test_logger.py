@@ -117,7 +117,7 @@ def test_metadata():
 
         for json_str in json_list:
             result = json.loads(json_str)
-            result = json.loads(result["fields"]["info"])
+            result = json.loads(result["info"])
 
         assert "test" in result
         shutil.rmtree("log", ignore_errors=False)

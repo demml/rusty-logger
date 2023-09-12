@@ -8,6 +8,9 @@ class LogConfig:
         level: str = "INFO",
         filename: Optional[str] = None,
         env: Optional[str] = None,
+        span: bool = False,
+        target: bool = False,
+        flatten: bool = True,
     ):
         """Creates logger configuration
 
@@ -23,6 +26,12 @@ class LogConfig:
                 or just a name (test.log).
             env:
                 The environment name to associate with logs. Defaults to "development"
+            span:
+                Whether to log span information.
+            target:
+                Whether to log target information.
+            flatten:
+                Whether to flatten the any fields that are passed.
 
         """
         ...

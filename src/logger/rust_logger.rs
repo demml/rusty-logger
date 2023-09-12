@@ -32,6 +32,9 @@ pub struct LogConfig {
 
     #[pyo3(get, set)]
     pub span: bool,
+
+    #[pyo3(get, set)]
+    pub flatten: bool,
 }
 
 #[pymethods]
@@ -45,6 +48,7 @@ impl LogConfig {
         env: Option<String>,
         target: Option<bool>,
         span: Option<bool>,
+        flatten: Option<bool>,
     ) -> LogConfig {
         let log_level = level.unwrap_or_else(|| "INFO".to_string());
         let log_env = env.unwrap_or_else(|| match env::var("APP_ENV") {
@@ -54,6 +58,7 @@ impl LogConfig {
 
         let log_target = target.unwrap_or(false);
         let log_span = span.unwrap_or(false);
+        let log_flatten = flatten.unwrap_or(true);
 
         LogConfig {
             stdout: stdout.unwrap_or(true),
@@ -63,6 +68,7 @@ impl LogConfig {
             env: Some(log_env),
             target: log_target,
             span: log_span,
+            flatten: log_flatten,
         }
     }
 }
@@ -150,6 +156,7 @@ impl JsonLogger {
             let layer: Box<dyn Layer<S> + Send + Sync> = tracing_subscriber::fmt::layer()
                 .with_target(log_config.target)
                 .json()
+                .flatten_event(log_config.flatten)
                 .with_current_span(log_config.span)
                 .with_writer(io::stdout)
                 .boxed();
@@ -161,6 +168,7 @@ impl JsonLogger {
             let layer = tracing_subscriber::fmt::layer()
                 .with_target(log_config.target)
                 .json()
+                .flatten_event(log_config.flatten)
                 .with_current_span(log_config.span)
                 .with_writer(io::stderr)
                 .boxed();
@@ -174,6 +182,7 @@ impl JsonLogger {
             let file_appender = tracing_appender::rolling::hourly(directory, file_name_prefix);
             let layer = tracing_subscriber::fmt::layer()
                 .json()
+                .flatten_event(log_config.flatten)
                 .with_target(log_config.target)
                 .with_current_span(log_config.span)
                 .with_writer(file_appender)
@@ -306,6 +315,7 @@ mod tests {
             env: None,
             target: false,
             span: false,
+            flatten: false,
         };
         let logger = JsonLogger::new(config, None);
         logger.info("test", None);
@@ -324,6 +334,7 @@ mod tests {
             env: None,
             target: false,
             span: false,
+            flatten: false,
         };
         let logger = JsonLogger::new(config, None);
         logger.info("test", None);
