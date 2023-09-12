@@ -1,6 +1,6 @@
 
 <br>
-<img src="img/rusty-logger-logo.png"  width="400" height="80" alt="rusty logger logo"/>
+<img src="img/rusty-logger-logo.png"  width="767" height="159" alt="rusty logger logo"/>
 <br>
 
 
