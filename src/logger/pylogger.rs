@@ -16,8 +16,9 @@ impl PyJsonLogger {
         name: Option<String>,
         config: Option<LogConfig>,
     ) -> PyJsonLogger {
-        let log_config = config
-            .unwrap_or_else(|| LogConfig::new(None, None, None, None, None, None, None, None));
+        let log_config = config.unwrap_or_else(|| {
+            LogConfig::new(None, None, None, None, None, None, None, None, None)
+        });
 
         let logger = JsonLogger::new(log_config, name);
 

@@ -7,6 +7,13 @@ use std::path::Path;
 use tracing_core::dispatcher::DefaultGuard;
 use tracing_subscriber::filter::EnvFilter;
 use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::fmt::format;
+use tracing_subscriber::fmt::format::DefaultFields;
+use tracing_subscriber::fmt::format::Format;
+use tracing_subscriber::fmt::format::JsonFields;
+use tracing_subscriber::fmt::Layer as FmtLayer;
+use tracing_subscriber::fmt::MakeWriter;
+use tracing_subscriber::layer;
 use tracing_subscriber::{prelude::*, registry::LookupSpan, Layer};
 
 #[pyclass]
@@ -35,6 +42,9 @@ pub struct LogConfig {
 
     #[pyo3(get, set)]
     pub flatten: bool,
+
+    #[pyo3(get, set)]
+    pub json: bool,
 }
 
 #[pymethods]
@@ -49,6 +59,7 @@ impl LogConfig {
         target: Option<bool>,
         span: Option<bool>,
         flatten: Option<bool>,
+        json: Option<bool>,
     ) -> LogConfig {
         let log_level = level.unwrap_or_else(|| "INFO".to_string());
         let log_env = env.unwrap_or_else(|| match env::var("APP_ENV") {
@@ -59,6 +70,7 @@ impl LogConfig {
         let log_target = target.unwrap_or(false);
         let log_span = span.unwrap_or(false);
         let log_flatten = flatten.unwrap_or(true);
+        let log_json = json.unwrap_or(true);
 
         LogConfig {
             stdout: stdout.unwrap_or(true),
@@ -69,6 +81,7 @@ impl LogConfig {
             target: log_target,
             span: log_span,
             flatten: log_flatten,
+            json: log_json,
         }
     }
 }
@@ -119,6 +132,14 @@ fn get_log_directory(output: &str) -> String {
     }
 }
 
+fn get_file_params(log_config: &LogConfig) -> (String, String) {
+    let file = log_config.filename.as_ref().unwrap().to_string();
+    let directory = get_log_directory(&file);
+    let file_name_prefix = get_file_name(Some(&file));
+
+    (directory, file_name_prefix)
+}
+
 /// A logger that outputs JSON
 ///
 /// # Arguments
@@ -129,13 +150,119 @@ fn get_log_directory(output: &str) -> String {
 ///
 ///
 #[allow(dead_code)]
-pub struct JsonLogger {
+pub struct RustLogger {
     pub env: String,
     pub name: String,
     guard: DefaultGuard,
 }
 
-impl JsonLogger {
+impl RustLogger {
+    fn construct_json_layer<W2, S>(
+        log_config: &LogConfig,
+        writer: W2,
+    ) -> FmtLayer<S, JsonFields, Format<tracing_subscriber::fmt::format::Json>, W2>
+    where
+        S: tracing_core::Subscriber,
+        W2: for<'writer> MakeWriter<'writer> + 'static,
+        for<'a> S: LookupSpan<'a>,
+    {
+        let layer = tracing_subscriber::fmt::layer()
+            .with_target(log_config.target)
+            .json()
+            .flatten_event(log_config.flatten)
+            .with_current_span(log_config.span)
+            .with_writer(writer);
+
+        layer
+    }
+
+    /// Build the json layers for the logger
+    ///
+    /// # Arguments
+    ///
+    /// * `log_config` - The configuration for the logger
+    ///
+    /// # Returns
+    ///
+    /// * `Vec<Box<dyn Layer<S> + Send + Sync>>` - The layers for the logger
+    fn construct_json_layers<S>(log_config: &LogConfig) -> Vec<Box<dyn Layer<S> + Send + Sync>>
+    where
+        S: tracing_core::Subscriber,
+        for<'a> S: LookupSpan<'a>,
+    {
+        let mut layers = Vec::new();
+
+        if log_config.stdout {
+            let layer = RustLogger::construct_json_layer(log_config, io::stdout).boxed();
+            layers.push(layer);
+        }
+
+        if log_config.stderr {
+            let layer = RustLogger::construct_json_layer(log_config, io::stderr).boxed();
+            layers.push(layer);
+        }
+
+        if log_config.filename.is_some() {
+            let (directory, file_name_prefix) = get_file_params(log_config);
+            let file_appender = tracing_appender::rolling::hourly(directory, file_name_prefix);
+            let layer = RustLogger::construct_json_layer(log_config, file_appender).boxed();
+            layers.push(layer);
+        }
+
+        layers
+    }
+
+    fn construct_cmd_layer<W2, S>(
+        log_config: &LogConfig,
+        writer: W2,
+    ) -> FmtLayer<S, DefaultFields, Format<tracing_subscriber::fmt::format::Full>, W2>
+    where
+        S: tracing_core::Subscriber,
+        W2: for<'writer> MakeWriter<'writer> + 'static,
+        for<'a> S: LookupSpan<'a>,
+    {
+        let layer = tracing_subscriber::fmt::layer()
+            .with_target(log_config.target)
+            .with_writer(writer);
+
+        layer
+    }
+
+    /// Build the layers for the logger
+    ///
+    /// # Arguments
+    ///
+    /// * `log_config` - The configuration for the logger
+    ///
+    /// # Returns
+    ///
+    /// * `Vec<Box<dyn Layer<S> + Send + Sync>>` - The layers for the logger
+    fn construct_cmd_layers<S>(log_config: &LogConfig) -> Vec<Box<dyn Layer<S> + Send + Sync>>
+    where
+        S: tracing_core::Subscriber,
+        for<'a> S: LookupSpan<'a>,
+    {
+        let mut layers = Vec::new();
+        if log_config.stdout {
+            let layer = RustLogger::construct_cmd_layer(log_config, io::stdout).boxed();
+            layers.push(layer);
+        }
+
+        if log_config.stderr {
+            let layer = RustLogger::construct_cmd_layer(log_config, io::stderr).boxed();
+            layers.push(layer);
+        }
+
+        if log_config.filename.is_some() {
+            let (directory, file_name_prefix) = get_file_params(log_config);
+            let file_appender = tracing_appender::rolling::hourly(directory, file_name_prefix);
+            let layer = RustLogger::construct_cmd_layer(log_config, file_appender).boxed();
+            layers.push(layer);
+        }
+
+        layers
+    }
+
     /// Build the layers for the logger
     ///
     /// # Arguments
@@ -150,47 +277,11 @@ impl JsonLogger {
         S: tracing_core::Subscriber,
         for<'a> S: LookupSpan<'a>,
     {
-        let mut layers = Vec::new();
-
-        if log_config.stdout {
-            let layer: Box<dyn Layer<S> + Send + Sync> = tracing_subscriber::fmt::layer()
-                .with_target(log_config.target)
-                .json()
-                .flatten_event(log_config.flatten)
-                .with_current_span(log_config.span)
-                .with_writer(io::stdout)
-                .boxed();
-
-            layers.push(layer);
+        if log_config.json {
+            RustLogger::construct_json_layers(log_config)
+        } else {
+            RustLogger::construct_cmd_layers(log_config)
         }
-
-        if log_config.stderr {
-            let layer = tracing_subscriber::fmt::layer()
-                .with_target(log_config.target)
-                .json()
-                .flatten_event(log_config.flatten)
-                .with_current_span(log_config.span)
-                .with_writer(io::stderr)
-                .boxed();
-            layers.push(layer);
-        }
-
-        if log_config.filename.is_some() {
-            let file = log_config.filename.as_ref().unwrap().to_string();
-            let directory = get_log_directory(&file);
-            let file_name_prefix = get_file_name(Some(&file));
-            let file_appender = tracing_appender::rolling::hourly(directory, file_name_prefix);
-            let layer = tracing_subscriber::fmt::layer()
-                .json()
-                .flatten_event(log_config.flatten)
-                .with_target(log_config.target)
-                .with_current_span(log_config.span)
-                .with_writer(file_appender)
-                .boxed();
-            layers.push(layer);
-        }
-
-        layers
     }
 
     /// Create a new logger
@@ -201,14 +292,15 @@ impl JsonLogger {
     /// * `level` - The level of the logger. Either "info", "debug", "warn", or "error"
     /// * `name` - The name of the file
     ///
-    pub fn new(log_config: LogConfig, name: Option<String>) -> JsonLogger {
-        let layers = JsonLogger::build_layers(&log_config);
+    pub fn new(log_config: LogConfig, name: Option<String>) -> RustLogger {
+        let layers = RustLogger::build_layers(&log_config);
         let global_filter =
             EnvFilter::from_default_env().add_directive(match log_config.level.as_str() {
                 "DEBUG" => LevelFilter::DEBUG.into(),
                 "INFO" => LevelFilter::INFO.into(),
                 "WARN" => LevelFilter::WARN.into(),
                 "ERROR" => LevelFilter::ERROR.into(),
+                "TRACE" => LevelFilter::TRACE.into(),
                 _ => LevelFilter::INFO.into(),
             });
         let guard = tracing_subscriber::registry()
@@ -303,7 +395,7 @@ impl JsonLogger {
 
 #[cfg(test)]
 mod tests {
-    use super::{JsonLogger, LogConfig};
+    use super::{LogConfig, RustLogger};
 
     #[test]
     fn test_stdout_logger() {
@@ -316,8 +408,9 @@ mod tests {
             target: false,
             span: false,
             flatten: false,
+            json: true,
         };
-        let logger = JsonLogger::new(config, None);
+        let logger = RustLogger::new(config, None);
         logger.info("test", None);
         logger.debug("test", None);
         logger.warning("test", None);
@@ -335,8 +428,9 @@ mod tests {
             target: false,
             span: false,
             flatten: false,
+            json: true,
         };
-        let logger = JsonLogger::new(config, None);
+        let logger = RustLogger::new(config, None);
         logger.info("test", None);
         logger.debug("test", None);
         logger.warning("test", None);
