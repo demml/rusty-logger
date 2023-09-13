@@ -4,11 +4,13 @@ use std::collections::HashMap;
 use std::env;
 use std::io;
 use std::path::Path;
+use time::format_description::FormatItem;
 use tracing_core::dispatcher::DefaultGuard;
 use tracing_subscriber::filter::EnvFilter;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::fmt::MakeWriter;
+use tracing_subscriber::prelude::__tracing_subscriber_Layer;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -112,6 +114,11 @@ impl LogMetadata {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct LoggTimer<'a> {
+    pub timer: UtcTime<Vec<FormatItem<'a>>>,
+}
+
 /// Get the name of the file
 ///
 /// # Arguments
@@ -169,30 +176,26 @@ pub struct RustLogger {
 
 impl RustLogger {
     fn construct_json_layer<W2, S>(
-        log_config: &LogConfig,
+        log_config: LogConfig,
         writer: W2,
-        layers: &mut Vec<Box<dyn Layer<S> + Send + Sync>>,
-    ) -> ()
+        timer: UtcTime<Vec<FormatItem<'static>>>,
+    ) -> Box<dyn __tracing_subscriber_Layer<S> + Send + Sync>
     where
         S: tracing_core::Subscriber,
         W2: for<'writer> MakeWriter<'writer> + 'static + Send + Sync,
         for<'a> S: LookupSpan<'a>,
     {
-        let time_format = time::format_description::parse(log_config.time_format.as_ref().unwrap())
-            .expect("Failed to parse time format");
-        let timer = UtcTime::new(time_format);
+        let layer = tracing_subscriber::fmt::layer()
+            .with_target(log_config.target)
+            .json()
+            .flatten_event(log_config.flatten.to_owned())
+            .with_current_span(log_config.span.to_owned())
+            .with_line_number(log_config.line_number.to_owned())
+            .with_timer(timer)
+            .with_writer(writer)
+            .boxed();
 
-        layers.push(
-            tracing_subscriber::fmt::layer()
-                .with_target(log_config.target)
-                .json()
-                .flatten_event(log_config.flatten)
-                .with_current_span(log_config.span)
-                .with_line_number(log_config.line_number)
-                .with_timer(timer)
-                .with_writer(writer)
-                .boxed(),
-        );
+        layer
     }
 
     /// Build the json layers for the logger
@@ -211,37 +214,52 @@ impl RustLogger {
     {
         let mut layers = Vec::new();
 
+        // set time format (applies to all layers)
+        let time_format =
+            time::format_description::parse("hello").expect("Failed to parse time format");
+        let log_timer = LoggTimer {
+            timer: UtcTime::new(time_format).to_owned(),
+        };
+
         if log_config.stdout {
-            RustLogger::construct_json_layer(log_config, io::stdout, &mut layers);
+            layers.push(RustLogger::construct_json_layer(
+                log_config.to_owned(),
+                io::stdout,
+                log_timer.timer.clone(),
+            ));
         }
 
         if log_config.stderr {
-            RustLogger::construct_json_layer(log_config, io::stderr, &mut layers);
+            layers.push(RustLogger::construct_json_layer(
+                log_config.to_owned(),
+                io::stderr,
+                log_timer.timer.clone(),
+            ));
         }
 
         if log_config.filename.is_some() {
             let (directory, file_name_prefix) = get_file_params(log_config);
             let file_appender = tracing_appender::rolling::hourly(directory, file_name_prefix);
-            RustLogger::construct_json_layer(log_config, file_appender, &mut layers);
+            layers.push(RustLogger::construct_json_layer(
+                log_config.to_owned(),
+                file_appender,
+                log_timer.timer.clone(),
+            ));
         }
 
         layers
     }
 
     fn construct_cmd_layer<W2, S>(
-        log_config: &LogConfig,
+        log_config: LogConfig,
         writer: W2,
-        layers: &Vec<Box<dyn Layer<S> + Send + Sync>>,
-    ) -> ()
+        timer: UtcTime<Vec<FormatItem<'static>>>,
+    ) -> Box<dyn __tracing_subscriber_Layer<S> + Send + Sync>
     where
         S: tracing_core::Subscriber,
         W2: for<'writer> MakeWriter<'writer> + 'static + Send + Sync,
         for<'a> S: LookupSpan<'a>,
     {
-        let time_format = time::format_description::parse(log_config.time_format.as_ref().unwrap())
-            .expect("Failed to parse time format");
-
-        let timer = UtcTime::new(time_format);
         let layer = tracing_subscriber::fmt::layer()
             .with_target(log_config.target)
             .with_line_number(log_config.line_number)
@@ -249,7 +267,7 @@ impl RustLogger {
             .with_writer(writer)
             .boxed();
 
-        layers.push(layer)
+        layer
     }
 
     /// Build the layers for the logger
@@ -267,18 +285,37 @@ impl RustLogger {
         for<'a> S: LookupSpan<'a>,
     {
         let mut layers = Vec::new();
+        // set time format (applies to all layers)
+        let time_format =
+            time::format_description::parse("hello").expect("Failed to parse time format");
+        let log_timer = LoggTimer {
+            timer: UtcTime::new(time_format).to_owned(),
+        };
+
         if log_config.stdout {
-            RustLogger::construct_cmd_layer(log_config, io::stdout, &layers);
+            layers.push(RustLogger::construct_cmd_layer(
+                log_config.to_owned(),
+                io::stdout,
+                log_timer.timer.clone(),
+            ));
         }
 
         if log_config.stderr {
-            RustLogger::construct_cmd_layer(log_config, io::stderr, &layers);
+            layers.push(RustLogger::construct_cmd_layer(
+                log_config.to_owned(),
+                io::stderr,
+                log_timer.timer.clone(),
+            ));
         }
 
         if log_config.filename.is_some() {
             let (directory, file_name_prefix) = get_file_params(log_config);
             let file_appender = tracing_appender::rolling::hourly(directory, file_name_prefix);
-            RustLogger::construct_cmd_layer(log_config, file_appender, &layers);
+            layers.push(RustLogger::construct_cmd_layer(
+                log_config.to_owned(),
+                file_appender,
+                log_timer.timer.clone(),
+            ));
         }
 
         layers

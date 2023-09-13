@@ -22,7 +22,7 @@ impl PyJsonLogger {
             )
         });
 
-        let logger = RustLogger::new(log_config, name);
+        let logger = RustLogger::new(&log_config, name);
 
         PyJsonLogger { logger }
     }
