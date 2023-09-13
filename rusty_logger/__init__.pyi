@@ -46,13 +46,13 @@ class LogMetadata:
         """
         ...
 
-class JsonLogger:
+class Logger:
     @classmethod
     def get_logger(
         cls,
         name: str,
         config: Optional[LogConfig] = None,
-    ) -> "JsonLogger":
+    ) -> "Logger":
         """Gets a logger with the given name. If output is None, the logger will log to stdout.
 
         Args:
