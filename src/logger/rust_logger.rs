@@ -171,7 +171,7 @@ impl RustLogger {
     fn construct_json_layer<W2, S>(
         log_config: &LogConfig,
         writer: W2,
-        layers: &Vec<Box<dyn Layer<S> + Send + Sync>>,
+        layers: &mut Vec<Box<dyn Layer<S> + Send + Sync>>,
     ) -> ()
     where
         S: tracing_core::Subscriber,
@@ -182,17 +182,17 @@ impl RustLogger {
             .expect("Failed to parse time format");
         let timer = UtcTime::new(time_format);
 
-        let layer = tracing_subscriber::fmt::layer()
-            .with_target(log_config.target)
-            .json()
-            .flatten_event(log_config.flatten)
-            .with_current_span(log_config.span)
-            .with_line_number(log_config.line_number)
-            .with_timer(timer)
-            .with_writer(writer)
-            .boxed();
-
-        layers.push(layer)
+        layers.push(
+            tracing_subscriber::fmt::layer()
+                .with_target(log_config.target)
+                .json()
+                .flatten_event(log_config.flatten)
+                .with_current_span(log_config.span)
+                .with_line_number(log_config.line_number)
+                .with_timer(timer)
+                .with_writer(writer)
+                .boxed(),
+        );
     }
 
     /// Build the json layers for the logger
@@ -313,8 +313,8 @@ impl RustLogger {
     /// * `level` - The level of the logger. Either "info", "debug", "warn", or "error"
     /// * `name` - The name of the file
     ///
-    pub fn new(log_config: LogConfig, name: Option<String>) -> RustLogger {
-        let layers = RustLogger::build_layers(&log_config);
+    pub fn new(log_config: &LogConfig, name: Option<String>) -> RustLogger {
+        let layers = RustLogger::build_layers(log_config);
         let global_filter =
             EnvFilter::from_default_env().add_directive(match log_config.level.as_str() {
                 "DEBUG" => LevelFilter::DEBUG.into(),
@@ -433,7 +433,7 @@ mod tests {
             line_number: false,
             time_format: None,
         };
-        let logger = RustLogger::new(config, None);
+        let logger = RustLogger::new(&config, None);
         logger.info("test", None);
         logger.debug("test", None);
         logger.warning("test", None);
@@ -455,7 +455,7 @@ mod tests {
             line_number: false,
             time_format: None,
         };
-        let logger = RustLogger::new(config, None);
+        let logger = RustLogger::new(&config, None);
         logger.info("test", None);
         logger.debug("test", None);
         logger.warning("test", None);

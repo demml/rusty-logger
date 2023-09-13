@@ -1,10 +1,10 @@
-use crate::logger::rust_logger::{JsonLogger, LogConfig, LogMetadata};
+use crate::logger::rust_logger::{LogConfig, LogMetadata, RustLogger};
 use pyo3::prelude::*;
 use pyo3::types::PyType;
 
-#[pyclass(name = "JsonLogger")]
+#[pyclass(name = "Logger")]
 pub struct PyJsonLogger {
-    logger: JsonLogger,
+    logger: RustLogger,
 }
 
 #[pymethods]
@@ -17,10 +17,12 @@ impl PyJsonLogger {
         config: Option<LogConfig>,
     ) -> PyJsonLogger {
         let log_config = config.unwrap_or_else(|| {
-            LogConfig::new(None, None, None, None, None, None, None, None, None)
+            LogConfig::new(
+                None, None, None, None, None, None, None, None, None, None, None,
+            )
         });
 
-        let logger = JsonLogger::new(log_config, name);
+        let logger = RustLogger::new(log_config, name);
 
         PyJsonLogger { logger }
     }
