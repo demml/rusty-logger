@@ -27,6 +27,18 @@ pub struct JsonConfig {
     pub flatten: bool,
 }
 
+#[pymethods]
+#[allow(clippy::too_many_arguments)]
+impl JsonConfig {
+    #[new]
+    pub fn new(span: Option<bool>, flatten: Option<bool>) -> JsonConfig {
+        JsonConfig {
+            span: span.unwrap_or(false),
+            flatten: flatten.unwrap_or(true),
+        }
+    }
+}
+
 #[pyclass]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogConfig {
@@ -83,10 +95,7 @@ impl LogConfig {
 
         let json_log_config = match json_config {
             Some(val) => Some(val),
-            None => Some(JsonConfig {
-                span: false,
-                flatten: true,
-            }),
+            None => Some(JsonConfig::new(None, None)),
         };
 
         LogConfig {
@@ -501,10 +510,7 @@ mod tests {
             level,
             env: None,
             target: false,
-            json_config: Some(JsonConfig {
-                span: false,
-                flatten: false,
-            }),
+            json_config: Some(JsonConfig::new(None, None)),
             line_number: false,
             time_format: None,
         }
