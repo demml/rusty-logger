@@ -1,16 +1,29 @@
 from typing import Optional, Dict
 
+class JsonConfig:
+    def __init__(self, span: bool, flatten: bool):
+        """Creates logger json configuration
+
+        Args:
+            span:
+                Whether to log span information.
+            flatten:
+                Whether to flatten the any fields that are passed.
+        """
+        ...
+
 class LogConfig:
     def __init__(
         self,
         stdout: bool = True,
         stderr: bool = False,
-        level: str = "INFO",
         filename: Optional[str] = None,
+        level: str = "INFO",
         env: Optional[str] = None,
-        span: bool = False,
         target: bool = False,
-        flatten: bool = True,
+        line_number: bool = False,
+        time_format: Optional[str] = None,
+        json_config: Optional[JsonConfig] = None,
     ):
         """Creates logger configuration
 
@@ -19,20 +32,22 @@ class LogConfig:
                 Whether to log to stdout.
             stderr:
                 Whether to log to stderr.
-            level:
-                The level to log at.
             filename:
                 Optional name of log file to write to. Can be a path (logs/test.log)
                 or just a name (test.log).
+            level:
+                The level to log at.
             env:
                 The environment name to associate with logs. Defaults to "development"
-            span:
-                Whether to log span information.
             target:
                 Whether to log target information.
-            flatten:
-                Whether to flatten the any fields that are passed.
-
+            line_number:
+                Whether to log line number information.
+            time_format:
+                The time format to use for logs. Defaults to "[year]-[month]-[day]T[hour]:[minute]:[second]".
+                For more information on time formats, see https://time-rs.github.io/book/api/well-known-format-descriptions.html
+            json_config:
+                Optional json logger configuration.
         """
         ...
 
