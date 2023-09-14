@@ -19,6 +19,16 @@ use tracing_subscriber::Layer;
 
 #[pyclass]
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct JsonConfig {
+    #[pyo3(get, set)]
+    pub span: bool,
+
+    #[pyo3(get, set)]
+    pub flatten: bool,
+}
+
+#[pyclass]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogConfig {
     #[pyo3(get, set)]
     pub stdout: bool,
@@ -39,22 +49,17 @@ pub struct LogConfig {
     pub target: bool,
 
     #[pyo3(get, set)]
-    pub span: bool,
-
-    #[pyo3(get, set)]
-    pub flatten: bool,
-
-    #[pyo3(get, set)]
-    pub json: bool,
-
-    #[pyo3(get, set)]
     pub line_number: bool,
 
     #[pyo3(get, set)]
     pub time_format: Option<String>,
+
+    #[pyo3(get, set)]
+    pub json_config: Option<JsonConfig>,
 }
 
 #[pymethods]
+#[allow(clippy::too_many_arguments)]
 impl LogConfig {
     // py init
     #[new]
@@ -65,11 +70,9 @@ impl LogConfig {
         level: Option<String>,
         env: Option<String>,
         target: Option<bool>,
-        span: Option<bool>,
-        flatten: Option<bool>,
-        json: Option<bool>,
         line_number: Option<bool>,
         time_format: Option<String>,
+        json_config: Option<JsonConfig>,
     ) -> LogConfig {
         let log_env = env.unwrap_or_else(|| match env::var("APP_ENV") {
             Ok(val) => val,
@@ -78,6 +81,14 @@ impl LogConfig {
         let time_format = time_format
             .unwrap_or_else(|| "[year]-[month]-[day]T[hour]:[minute]:[second]".to_string());
 
+        let json_log_config = match json_config {
+            Some(val) => Some(val),
+            None => Some(JsonConfig {
+                span: false,
+                flatten: true,
+            }),
+        };
+
         LogConfig {
             stdout: stdout.unwrap_or(true),
             stderr: stderr.unwrap_or(false),
@@ -85,11 +96,9 @@ impl LogConfig {
             level: level.unwrap_or_else(|| "INFO".to_string()),
             env: Some(log_env),
             target: target.unwrap_or(false),
-            span: span.unwrap_or(false),
-            flatten: flatten.unwrap_or(true),
-            json: json.unwrap_or(true),
             line_number: line_number.unwrap_or(false),
             time_format: Some(time_format),
+            json_config: json_log_config,
         }
     }
 }
@@ -227,11 +236,14 @@ impl RustLogger {
         W2: for<'writer> MakeWriter<'writer> + 'static + Send + Sync,
         for<'a> S: LookupSpan<'a>,
     {
+        let flatten = log_config.json_config.as_ref().unwrap().flatten;
+        let span = log_config.json_config.as_ref().unwrap().span;
+
         let layer = tracing_subscriber::fmt::layer()
             .with_target(log_config.target)
             .json()
-            .flatten_event(log_config.flatten.to_owned())
-            .with_current_span(log_config.span.to_owned())
+            .flatten_event(flatten)
+            .with_current_span(span)
             .with_line_number(log_config.line_number.to_owned())
             .with_timer(timer)
             .with_writer(writer)
@@ -266,7 +278,7 @@ impl RustLogger {
         if log_config.stdout {
             layers.push(RustLogger::construct_json_layer(
                 log_config,
-                &io::stdout,
+                io::stdout,
                 log_timer.timer.clone(),
             ));
         }
@@ -379,7 +391,7 @@ impl RustLogger {
         S: tracing_core::Subscriber,
         for<'a> S: LookupSpan<'a>,
     {
-        if log_config.json {
+        if log_config.json_config.is_some() {
             RustLogger::construct_json_layers(log_config)
         } else {
             RustLogger::construct_cmd_layers(log_config)
@@ -392,7 +404,7 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn info(&self, message: &str, metadata: Option<LogMetadata>) {
+    pub fn info(&self, message: &str, metadata: Option<&LogMetadata>) {
         match metadata {
             Some(val) => tracing::info!(
                 message = message,
@@ -410,7 +422,7 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn debug(&self, message: &str, metadata: Option<LogMetadata>) {
+    pub fn debug(&self, message: &str, metadata: Option<&LogMetadata>) {
         match metadata {
             Some(val) => tracing::debug!(
                 message = message,
@@ -428,7 +440,7 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn warning(&self, message: &str, metadata: Option<LogMetadata>) {
+    pub fn warning(&self, message: &str, metadata: Option<&LogMetadata>) {
         match metadata {
             Some(val) => tracing::warn!(
                 message = message,
@@ -446,7 +458,7 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn error(&self, message: &str, metadata: Option<LogMetadata>) {
+    pub fn error(&self, message: &str, metadata: Option<&LogMetadata>) {
         match metadata {
             Some(val) => tracing::error!(
                 message = message,
@@ -457,53 +469,77 @@ impl RustLogger {
             None => tracing::error!(message = message, app_env = self.env, name = self.name),
         };
     }
+
+    /// Log an trace message
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The message to log
+    ///
+    pub fn trace(&self, message: &str, metadata: Option<&LogMetadata>) {
+        match metadata {
+            Some(val) => tracing::error!(
+                message = message,
+                app_env = self.env,
+                name = self.name,
+                info = ?val.info
+            ),
+            None => tracing::trace!(message = message, app_env = self.env, name = self.name),
+        };
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{LogConfig, RustLogger};
+    use super::{JsonConfig, LogConfig, LogMetadata, RustLogger};
+
+    fn generate_test_json_config(level: String, stdout: bool, stderr: bool) -> LogConfig {
+        LogConfig {
+            stdout,
+            stderr,
+            filename: None,
+            level,
+            env: None,
+            target: false,
+            json_config: Some(JsonConfig {
+                span: false,
+                flatten: false,
+            }),
+            line_number: false,
+            time_format: None,
+        }
+    }
 
     #[test]
     fn test_stdout_logger() {
-        let config = LogConfig {
-            stdout: true,
-            stderr: false,
-            filename: None,
-            level: "INFO".to_string(),
-            env: None,
-            target: false,
-            span: false,
-            flatten: false,
-            json: true,
-            line_number: false,
-            time_format: None,
-        };
-        let logger = RustLogger::new(&config, None);
-        logger.info("test", None);
-        logger.debug("test", None);
-        logger.warning("test", None);
-        logger.error("test", None);
+        let levels = vec!["INFO", "DEBUG", "WARN", "ERROR", "TRACE"];
+
+        levels.iter().for_each(|level| {
+            let config = generate_test_json_config(level.to_string(), true, false);
+            let logger = RustLogger::new(&config, None);
+            logger.info("test", None);
+            logger.debug("test", None);
+            logger.warning("test", None);
+            logger.error("test", None);
+            logger.trace("test", None);
+        });
     }
 
     #[test]
     fn test_stderr_logger() {
-        let config = LogConfig {
-            stdout: true,
-            stderr: false,
-            filename: None,
-            level: "INFO".to_string(),
-            env: None,
-            target: false,
-            span: false,
-            flatten: false,
-            json: true,
-            line_number: false,
-            time_format: None,
+        let levels = vec!["INFO", "DEBUG", "WARN", "ERROR", "TRACE"];
+        let metadata = LogMetadata {
+            info: std::collections::HashMap::from([("Mercury".to_string(), "Mercury".to_string())]),
         };
-        let logger = RustLogger::new(&config, None);
-        logger.info("test", None);
-        logger.debug("test", None);
-        logger.warning("test", None);
-        logger.error("test", None);
+
+        levels.iter().for_each(|level| {
+            let config = generate_test_json_config(level.to_string(), false, true);
+            let logger = RustLogger::new(&config, None);
+            logger.info("test", Some(&metadata));
+            logger.debug("test", Some(&metadata));
+            logger.warning("test", Some(&metadata));
+            logger.error("test", Some(&metadata));
+            logger.trace("test", Some(&metadata));
+        });
     }
 }

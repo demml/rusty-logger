@@ -18,9 +18,7 @@ impl PyJsonLogger {
     ) -> PyJsonLogger {
         let log_config = config.unwrap_or_else(|| {
             // get default
-            LogConfig::new(
-                None, None, None, None, None, None, None, None, None, None, None,
-            )
+            LogConfig::new(None, None, None, None, None, None, None, None, None)
         });
 
         let logger = RustLogger::new(&log_config, name);
@@ -29,18 +27,22 @@ impl PyJsonLogger {
     }
 
     pub fn info(&self, message: &str, metadata: Option<LogMetadata>) {
-        self.logger.info(message, metadata);
+        self.logger.info(message, metadata.as_ref());
     }
 
     pub fn debug(&self, message: &str, metadata: Option<LogMetadata>) {
-        self.logger.debug(message, metadata);
+        self.logger.debug(message, metadata.as_ref());
     }
 
     pub fn warning(&self, message: &str, metadata: Option<LogMetadata>) {
-        self.logger.warning(message, metadata);
+        self.logger.warning(message, metadata.as_ref());
     }
 
     pub fn error(&self, message: &str, metadata: Option<LogMetadata>) {
-        self.logger.error(message, metadata);
+        self.logger.error(message, metadata.as_ref());
+    }
+
+    pub fn trace(&self, message: &str, metadata: Option<LogMetadata>) {
+        self.logger.trace(message, metadata.as_ref());
     }
 }
