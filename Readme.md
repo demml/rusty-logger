@@ -8,7 +8,7 @@
 
 ## Rusty Logger
 
-Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin python wrapper for `Rusts` tracing library that provides minimal features for those that just want to log without crazy configurations.
+Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin python wrapper for `Rust's` `tracing` library that provides minimal features for those that just want to log without crazy configurations.
 
 
 ## Table of contents
