@@ -1,9 +1,18 @@
-from rusty_logger import JsonLogger, LogConfig
+from rusty_logger import Logger, LogConfig, JsonConfig
 
-logger = JsonLogger.get_logger(__name__, config=LogConfig(filename="log/test.log"))
+
+class JsonLogger(Logger):
+    @classmethod
+    def get_logger(cls, name: str, config: LogConfig | None = None) -> Logger:
+        config = LogConfig(
+            filename=f"log/test.log",
+            json_config=JsonConfig(),
+        )
+        return super().get_logger(name, config)
 
 
 class TestTwo:
     @staticmethod
     def test_logger():
+        logger = JsonLogger.get_logger(__name__)
         logger.info("This is a test log")

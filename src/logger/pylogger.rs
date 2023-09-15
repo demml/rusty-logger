@@ -3,7 +3,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyType;
 use serde_json::{json, to_string_pretty};
 
-#[pyclass(name = "Logger")]
+#[pyclass(name = "Logger", subclass)]
 #[derive(Debug)]
 pub struct PyJsonLogger {
     logger: RustLogger,

@@ -98,6 +98,7 @@ def test_error_logger_file():
     for name in glob.glob(f"log/test.log*"):
         with open(name, "r") as fp:
             for count, line in enumerate(fp):
+                count
                 pass
             count = count + 1
     assert count == 1
@@ -126,6 +127,7 @@ def test_metadata():
         config=LogConfig(
             filename=f"log/test.log",
             level="INFO",
+            json_config=JsonConfig(),
         ),
     )
 

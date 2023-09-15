@@ -15,8 +15,10 @@ lints.ruff:
 	poetry run ruff check ${SOURCE_OBJECTS}
 lints.mypy:
 	poetry run mypy ${SOURCE_OBJECTS}
-lints: lints.ruff lints.mypy
-lints.ci: lints.format_check lints.ruff lints.mypy
+lints.pylint:
+	poetry run pylint ${SOURCE_OBJECTS}
+lints: lints.ruff lints.pylint lints.mypy
+lints.ci: lints.format_check lints.ruff lints.pylint lints.mypy
 
 setup.project:
 	poetry install --all-extras --with dev
