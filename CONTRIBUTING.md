@@ -1,4 +1,4 @@
-# Contributing to Shipt/opsml
+# Contributing to Rusty-Logger
 
 ## Welcome
 Hello! We're glad and grateful that you're interested in contributing to `Rusty-Logger` :tada:! Below you will find the general guidelines for setting up your environment and creating/submitting `pull requests`.
@@ -51,9 +51,9 @@ Steps:
 ## Community Guidelines
   1. Be Kind
     - Working with us should be a fun learning opportunity, and we want it to be a good experience for everyone. Please treat each other with respect.  
-    - If something looks outdated or incorrect, please let us know! We want to make `Opsml` as useful as possible. 
+    - If something looks outdated or incorrect, please let us know! We want to make `Rusty-Logger` as useful as possible. 
   2. Own Your Work
-     * Creating a PR for `Opsml` is your first step to becoming a contributor, so make sure that you own your changes. 
+     * Creating a PR for `Rusty-Logger` is your first step to becoming a contributor, so make sure that you own your changes. 
      * Our maintainers will do their best to respond to you in a timely manner, but we ask the same from you as the contributor. 
 
 ## Submitting issues/bugs
