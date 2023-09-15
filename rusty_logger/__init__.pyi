@@ -1,5 +1,29 @@
 from typing import Optional, Dict
 
+class LogLevel:
+    """Enum for log levels."""
+
+    @property
+    def INFO(self) -> str:
+        """The INFO log level."""
+        ...
+    @property
+    def DEBUG(self) -> str:
+        """The DEBUG log level."""
+        ...
+    @property
+    def WARN(self) -> str:
+        """The WARNING log level."""
+        ...
+    @property
+    def ERROR(self) -> str:
+        """The ERROR log level."""
+        ...
+    @property
+    def TRACE(self) -> str:
+        """The TRACE log level."""
+        ...
+
 class JsonConfig:
     def __init__(
         self,

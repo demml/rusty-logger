@@ -1,5 +1,5 @@
 import glob
-from rusty_logger import Logger, LogConfig, LogMetadata, JsonConfig
+from rusty_logger import Logger, LogConfig, LogMetadata, JsonConfig, LogLevel
 import logging
 import shutil
 import json
@@ -16,6 +16,14 @@ def test_log_config():
     assert config.target is False
     assert config.line_number is False
     assert config.json_config is None
+
+
+def test_log_level():
+    assert LogLevel.DEBUG == "DEBUG"
+    assert LogLevel.INFO == "INFO"
+    assert LogLevel.WARN == "WARN"
+    assert LogLevel.ERROR == "ERROR"
+    assert LogLevel.TRACE == "TRACE"
 
 
 def test_info_logger_stdout():
