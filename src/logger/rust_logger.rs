@@ -17,6 +17,9 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::Layer;
 use tracing_subscriber::Registry;
 
+type ReloadHandle =
+    reload::Handle<LevelFilter, Layered<Vec<Box<dyn Layer<Registry> + Send + Sync>>, Registry>>;
+
 #[pyclass(dict)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct JsonConfig {
@@ -177,8 +180,7 @@ pub struct RustLogger {
     pub name: String,
     pub config: LogConfig,
     guard: DefaultGuard,
-    reload_handle:
-        reload::Handle<LevelFilter, Layered<Vec<Box<dyn Layer<Registry> + Send + Sync>>, Registry>>,
+    reload_handle: ReloadHandle,
 }
 
 impl RustLogger {
