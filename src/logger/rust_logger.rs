@@ -473,7 +473,7 @@ mod tests {
 
     #[test]
     fn test_stdout_logger() {
-        let levels = vec!["INFO", "DEBUG", "WARN", "ERROR", "TRACE"];
+        let levels = ["INFO", "DEBUG", "WARN", "ERROR", "TRACE"];
 
         levels.iter().for_each(|level| {
             let config = generate_test_json_config(level.to_string(), true, false);
@@ -488,7 +488,7 @@ mod tests {
 
     #[test]
     fn test_stderr_logger() {
-        let levels = vec!["INFO", "DEBUG", "WARN", "ERROR", "TRACE"];
+        let levels = ["INFO", "DEBUG", "WARN", "ERROR", "TRACE"];
         let metadata = LogMetadata {
             info: std::collections::HashMap::from([("Mercury".to_string(), "Mercury".to_string())]),
         };
