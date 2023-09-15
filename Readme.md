@@ -16,8 +16,7 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 - [Additional metadata](#additional-metadata)
 - [Code examples](#show-me-the-code)
 - [Performance](#performance)
-
-
+- [Contributing](#contributing)
 
 ## Supported Configuration
 
