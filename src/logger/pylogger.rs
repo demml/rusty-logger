@@ -28,6 +28,17 @@ impl PyJsonLogger {
         PyJsonLogger { logger }
     }
 
+    /// Set the log level for the logger
+    ///
+    /// # Arguments
+    /// * `level` - The log level to set
+    ///
+    pub fn set_level(&mut self, level: String) {
+        let mut config = self.logger.config.clone();
+        config.log_level(level);
+        self.logger = RustLogger::new(&config, None);
+    }
+
     pub fn info(&self, message: &str, metadata: Option<LogMetadata>) {
         self.logger.info(message, metadata.as_ref());
     }

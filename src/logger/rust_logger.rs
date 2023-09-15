@@ -101,6 +101,10 @@ impl LogConfig {
         }
     }
 
+    pub fn log_level(&mut self, level: String) {
+        self.level = level;
+    }
+
     pub fn __str__(&self) -> PyResult<String> {
         Ok(serde_json::to_string_pretty(&self).unwrap())
     }
