@@ -3,6 +3,8 @@
 <img src="img/rusty-logger-logo.png"  width="767" height="159" alt="rusty logger logo"/>
 <br>
 
+[![CI](https://github.com/thorrester/rusty-logger/actions/workflows/CI.yml/badge.svg)](https://github.com/thorrester/rusty-logger/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/gh/thorrester/rusty-logger/graph/badge.svg?token=RVDMQRUEHT)](https://codecov.io/gh/thorrester/rusty-logger)
 
 ## Rusty Logger
 
