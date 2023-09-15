@@ -28,7 +28,9 @@ setup.project:
 test.unit:
 	poetry run pytest \
 		--cov \
-		--cov-fail-under=0
+		--cov-fail-under=0 \
+		--cov-report xml:./coverage.xml \
+		--cov-report term 
 
 poetry.pre.patch:
 	poetry version prepatch
