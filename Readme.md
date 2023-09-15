@@ -11,7 +11,7 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 ## Supported Configuration
 
 | Arg  | Description | Default |
-| ------------- | :------------- :| :-------------: |
+| ------------- | :-------------:| :-------------: |
 | `stdout`  | Log to stdout  | `True` |
 | `stderr`  | Log to stderr  | `False` |
 | `filename`  | Log to file  | `None` |
