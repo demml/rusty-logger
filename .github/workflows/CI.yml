@@ -40,14 +40,14 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
 
   test-os:
-    name: test on ${{ matrix.os }}
+    name: test ${{ matrix.os }}-${{ matrix.python-version }}
 
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
         poetry-version: ["1.5.1"]
-        python-version: ["3.9", "3.10","3.11"]
+        python-version: ["3.10","3.11"]
 
     runs-on: ${{ matrix.os }}-latest
     needs: [rust-lints]
@@ -62,7 +62,7 @@ jobs:
       - name: cache rust
         uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.os }}-v1
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-v1
 
       - name: set up python
         uses: actions/setup-python@v4

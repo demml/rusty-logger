@@ -1,9 +1,10 @@
+from typing import Optional
 from rusty_logger import Logger, LogConfig, JsonConfig
 
 
 class JsonLogger(Logger):
     @classmethod
-    def get_logger(cls, name: str, config: LogConfig | None = None) -> Logger:
+    def get_logger(cls, name: str, config: Optional[LogConfig] = None) -> Logger:
         config = LogConfig(
             filename=f"log/test.log",
             json_config=JsonConfig(),
