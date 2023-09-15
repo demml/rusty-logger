@@ -64,7 +64,7 @@ class LogConfig:
                 or just a name (test.log).
             level:
                 The level to log at.
-            env:
+            app_env:
                 The environment name to associate with logs. Defaults to "development"
             target:
                 Whether to log target information.

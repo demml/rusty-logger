@@ -6,4 +6,16 @@
 
 ## Rusty Logger
 
-A simple and fast python json logger built with `Rust`
+Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin python wrapper for `Rusts` tracing library that provides minimal features for those that just want to log without crazy configurations.
+
+## Supported Configuration
+
+| Arg  | Description | Default |
+| ------------- | :------------- :| :-------------: |
+| `stdout`  | Log to stdout  | `True` |
+| `stderr`  | Log to stderr  | `False` |
+| `filename`  | Log to file  | `None` |
+| `level`  | Level to log  | `INFO` |
+| `app_env`  | Application environment (will also source from APP_ENV env var)  | `development` |
+
+
