@@ -38,7 +38,7 @@ class JsonConfig:
         ...
     @property
     def flatten(self) -> bool:
-        """Whether to flatten the any fields that are passed."""
+        """Whether to flatten any fields that are passed."""
         ...
 
 class LogConfig:
@@ -49,7 +49,6 @@ class LogConfig:
         filename: Optional[str] = None,
         level: str = "INFO",
         app_env: Optional[str] = "development",
-        target: bool = False,
         json_config: Optional[JsonConfig] = None,
     ):
         """Creates logger configuration
@@ -66,8 +65,6 @@ class LogConfig:
                 The level to log at.
             app_env:
                 The environment name to associate with logs. Defaults to "development"
-            target:
-                Whether to log target information.
             json_config:
                 Optional json logger configuration.
         """
@@ -92,10 +89,6 @@ class LogConfig:
     @property
     def app_env(self) -> Optional[str]:
         """The environment name to associate with logs. Defaults to "development"."""
-        ...
-    @property
-    def target(self) -> bool:
-        """Whether to log target information."""
         ...
     @property
     def json_config(self) -> Optional[JsonConfig]:
