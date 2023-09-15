@@ -5,22 +5,21 @@ use std::env;
 use std::io;
 use std::path::Path;
 use tracing_core::dispatcher::DefaultGuard;
-use tracing_subscriber::filter::EnvFilter;
 use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::layer::Layered;
 
 use tracing_subscriber::fmt::MakeWriter;
 use tracing_subscriber::prelude::__tracing_subscriber_Layer;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::registry::LookupSpan;
+use tracing_subscriber::reload;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::Layer;
+use tracing_subscriber::Registry;
 
 #[pyclass(dict)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct JsonConfig {
-    #[pyo3(get, set)]
-    pub span: bool,
-
     #[pyo3(get, set)]
     pub flatten: bool,
 }
@@ -29,9 +28,8 @@ pub struct JsonConfig {
 #[allow(clippy::too_many_arguments)]
 impl JsonConfig {
     #[new]
-    pub fn new(span: Option<bool>, flatten: Option<bool>) -> Self {
+    pub fn new(flatten: Option<bool>) -> Self {
         JsonConfig {
-            span: span.unwrap_or(false),
             flatten: flatten.unwrap_or(true),
         }
     }
@@ -63,9 +61,6 @@ pub struct LogConfig {
     pub target: bool,
 
     #[pyo3(get, set)]
-    pub line_number: bool,
-
-    #[pyo3(get, set)]
     pub json_config: Option<JsonConfig>,
 }
 
@@ -81,7 +76,6 @@ impl LogConfig {
         level: Option<String>,
         app_env: Option<String>,
         target: Option<bool>,
-        line_number: Option<bool>,
         json_config: Option<JsonConfig>,
     ) -> Self {
         let log_env = app_env.unwrap_or_else(|| match env::var("APP_ENV") {
@@ -96,7 +90,6 @@ impl LogConfig {
             level: level.unwrap_or_else(|| "INFO".to_string()),
             app_env: Some(log_env),
             target: target.unwrap_or(false),
-            line_number: line_number.unwrap_or(false),
             json_config,
         }
     }
@@ -177,16 +170,28 @@ fn get_file_params(log_config: &LogConfig) -> (String, String) {
 /// * `name` - The name of the file
 ///
 ///
-#[derive(Debug)]
+
 #[allow(dead_code)]
 pub struct RustLogger {
     pub env: String,
     pub name: String,
     pub config: LogConfig,
     guard: DefaultGuard,
+    reload_handle:
+        reload::Handle<LevelFilter, Layered<Vec<Box<dyn Layer<Registry> + Send + Sync>>, Registry>>,
 }
 
 impl RustLogger {
+    pub fn get_level_filter(level: &str) -> LevelFilter {
+        match level {
+            "DEBUG" => LevelFilter::DEBUG,
+            "INFO" => LevelFilter::INFO,
+            "WARN" => LevelFilter::WARN,
+            "ERROR" => LevelFilter::ERROR,
+            "TRACE" => LevelFilter::TRACE,
+            _ => LevelFilter::INFO,
+        }
+    }
     /// Create a new logger
     ///
     /// # Arguments
@@ -197,18 +202,12 @@ impl RustLogger {
     ///
     pub fn new(log_config: &LogConfig, name: Option<String>) -> RustLogger {
         let layers = RustLogger::build_layers(log_config);
-        let global_filter =
-            EnvFilter::from_default_env().add_directive(match log_config.level.as_str() {
-                "DEBUG" => LevelFilter::DEBUG.into(),
-                "INFO" => LevelFilter::INFO.into(),
-                "WARN" => LevelFilter::WARN.into(),
-                "ERROR" => LevelFilter::ERROR.into(),
-                "TRACE" => LevelFilter::TRACE.into(),
-                _ => LevelFilter::INFO.into(),
-            });
+        let filter = RustLogger::get_level_filter(&log_config.level);
+        let (filter, reload_handle) = reload::Layer::new(filter);
+
         let guard = tracing_subscriber::registry()
             .with(layers)
-            .with(global_filter)
+            .with(filter)
             .set_default();
 
         let file_name = get_file_name(name);
@@ -221,7 +220,13 @@ impl RustLogger {
             name: file_name,
             guard,
             config: log_config.clone(),
+            reload_handle,
         }
+    }
+
+    pub fn reload_level(&mut self, level: &str) -> Result<(), reload::Error> {
+        let filter = RustLogger::get_level_filter(level);
+        self.reload_handle.reload(filter)
     }
 
     /// Build the json layer for the logger
@@ -245,14 +250,11 @@ impl RustLogger {
         for<'a> S: LookupSpan<'a>,
     {
         let flatten = log_config.json_config.as_ref().unwrap().flatten;
-        let span = log_config.json_config.as_ref().unwrap().span;
 
         let layer = tracing_subscriber::fmt::layer()
             .with_target(log_config.target)
             .json()
             .flatten_event(flatten)
-            .with_current_span(span)
-            .with_line_number(log_config.line_number.to_owned())
             .with_writer(writer)
             .boxed();
 
@@ -303,7 +305,6 @@ impl RustLogger {
     {
         let layer = tracing_subscriber::fmt::layer()
             .with_target(log_config.target)
-            .with_line_number(log_config.line_number)
             .with_writer(writer)
             .boxed();
 
@@ -470,8 +471,7 @@ mod tests {
             level,
             app_env: None,
             target: false,
-            json_config: Some(JsonConfig::new(None, None)),
-            line_number: false,
+            json_config: Some(JsonConfig::new(None)),
         }
     }
 

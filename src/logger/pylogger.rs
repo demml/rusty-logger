@@ -36,9 +36,9 @@ impl LogLevel {
 }
 
 #[pyclass(name = "Logger", subclass)]
-#[derive(Debug)]
 pub struct PyJsonLogger {
     logger: RustLogger,
+    pub config: LogConfig,
 }
 
 #[pymethods]
@@ -52,12 +52,15 @@ impl PyJsonLogger {
     ) -> PyJsonLogger {
         let log_config = config.unwrap_or_else(|| {
             // get default
-            LogConfig::new(None, None, None, None, None, None, None, None)
+            LogConfig::new(None, None, None, None, None, None, None)
         });
 
         let logger = RustLogger::new(&log_config, name);
 
-        PyJsonLogger { logger }
+        PyJsonLogger {
+            logger,
+            config: log_config,
+        }
     }
 
     /// Set the log level for the logger
@@ -66,9 +69,9 @@ impl PyJsonLogger {
     /// * `level` - The log level to set
     ///
     pub fn set_level(&mut self, level: String) {
-        let mut config = self.logger.config.clone();
+        let mut config = self.config.clone();
         config.log_level(level);
-        self.logger = RustLogger::new(&config, None);
+        self.logger.reload_level(&config.level).unwrap()
     }
 
     pub fn info(&self, message: &str, metadata: Option<LogMetadata>) {

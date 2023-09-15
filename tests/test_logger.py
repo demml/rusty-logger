@@ -14,7 +14,6 @@ def test_log_config():
     assert config.level == "INFO"
     assert config.app_env == "development"
     assert config.target is False
-    assert config.line_number is False
     assert config.json_config is None
 
 
@@ -66,9 +65,7 @@ def test_warn_logger_file():
         config=LogConfig(
             filename=f"log/test.log",
             level="TRACE",
-            line_number=True,
             json_config=JsonConfig(
-                span=True,
                 flatten=True,
             ),
         ),
