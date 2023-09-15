@@ -8,6 +8,17 @@
 
 Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin python wrapper for `Rusts` tracing library that provides minimal features for those that just want to log without crazy configurations.
 
+
+## Table of contents
+
+- [Supported configuration](#supported-configuration)
+- [Constraints](#constraints)
+- [Additional metadata](#additional-metadata)
+- [Code examples](#show-me-the-code)
+- [Performance](#performance)
+
+
+
 ## Supported Configuration
 
 | Arg  | Description | Default |
@@ -20,6 +31,8 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 | `json_config`  | `JsonCofig`  | `None` |
 | `json_config.flatten`  | Whether to flatten any passed fields  | `True` |
 
+## Constraints
+Due to some limitations with how time can be formatted within the `tracing` library, `Rusty-Logger` implements UTC time only. In addition, because `Rusty-Logger` calls `Rust` directly, it's not currently possible to pull the specific line number where logging takes place unless python is directly used (if you're even interested in this feature :smile:). If you'd like to see these features (line number and time formatting) implemented, and you want to contribute, please see the [contributing](https://github.com/thorrester/rusty-logger/blob/main/CONTRIBUTING.md) guide.
 
 ## Additional Metadata
 
@@ -116,3 +129,12 @@ output
 ```shell
 {"timestamp":"2023-09-15T20:32:23.417027Z","level":"ERROR","message":"MOM'S SPAGHETTI!","app_env":"development","name":"your_file.py"}
 ```
+
+## Performance
+Why would we do this when python logging is fine? Because we wanted something faster :smile:. From out own benchmarks, `Rusty-Logger` tends to be 4.5x faster than vanilla python logging. And while speed may not be mission critical for a few thousands logs, it can be for millions, which many company deal with on a daily basis. Time is money and compute, and we want to save you both.
+
+## Contributing
+While `Rusty-Logger` is production ready out of the box, it is still in it's infancy and is ripe for additional contributions. If you'd like to contribute, please see the [contributing](https://github.com/thorrester/rusty-logger/blob/main/CONTRIBUTING.md) guide.
+
+
+Thank You!!! :heart: :heart: :heart:
