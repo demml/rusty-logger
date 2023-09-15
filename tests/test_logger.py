@@ -1,7 +1,9 @@
 import glob
 from rusty_logger import Logger, LogConfig, LogMetadata, JsonConfig
+import logging
 import shutil
 import json
+import timeit
 
 
 def test_log_config():
