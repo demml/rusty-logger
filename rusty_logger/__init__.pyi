@@ -1,27 +1,44 @@
 from typing import Optional, Dict
 
+class LogLevel:
+    """Enum for log levels."""
+
+    @property
+    def INFO(self) -> str:
+        """The INFO log level."""
+        ...
+    @property
+    def DEBUG(self) -> str:
+        """The DEBUG log level."""
+        ...
+    @property
+    def WARN(self) -> str:
+        """The WARNING log level."""
+        ...
+    @property
+    def ERROR(self) -> str:
+        """The ERROR log level."""
+        ...
+    @property
+    def TRACE(self) -> str:
+        """The TRACE log level."""
+        ...
+
 class JsonConfig:
     def __init__(
         self,
-        span: bool = False,
         flatten: bool = True,
     ):
         """Creates logger json configuration
 
         Args:
-            span:
-                Whether to log span information.
             flatten:
                 Whether to flatten the any fields that are passed.
         """
         ...
     @property
-    def span(self) -> bool:
-        """Whether to log span information."""
-        ...
-    @property
     def flatten(self) -> bool:
-        """Whether to flatten the any fields that are passed."""
+        """Whether to flatten any fields that are passed."""
         ...
 
 class LogConfig:
@@ -32,8 +49,6 @@ class LogConfig:
         filename: Optional[str] = None,
         level: str = "INFO",
         app_env: Optional[str] = "development",
-        target: bool = False,
-        line_number: bool = False,
         json_config: Optional[JsonConfig] = None,
     ):
         """Creates logger configuration
@@ -48,12 +63,8 @@ class LogConfig:
                 or just a name (test.log).
             level:
                 The level to log at.
-            env:
+            app_env:
                 The environment name to associate with logs. Defaults to "development"
-            target:
-                Whether to log target information.
-            line_number:
-                Whether to log line number information.
             json_config:
                 Optional json logger configuration.
         """
@@ -78,14 +89,6 @@ class LogConfig:
     @property
     def app_env(self) -> Optional[str]:
         """The environment name to associate with logs. Defaults to "development"."""
-        ...
-    @property
-    def target(self) -> bool:
-        """Whether to log target information."""
-        ...
-    @property
-    def line_number(self) -> bool:
-        """Whether to log line number information."""
         ...
     @property
     def json_config(self) -> Optional[JsonConfig]:
@@ -123,6 +126,14 @@ class Logger:
 
         Returns:
             A `JsonLogger` instance.
+        """
+        ...
+    def set_level(self, level: str) -> None:
+        """Sets the log level of the logger.
+
+        Args:
+            level:
+                The level to log at.
         """
         ...
     def info(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
