@@ -1,8 +1,10 @@
 use crate::logger::rust_logger::{LogConfig, LogMetadata, RustLogger};
 use pyo3::prelude::*;
 use pyo3::types::PyType;
+use serde_json::{json, to_string_pretty};
 
 #[pyclass(name = "Logger")]
+#[derive(Debug)]
 pub struct PyJsonLogger {
     logger: RustLogger,
 }
@@ -18,7 +20,7 @@ impl PyJsonLogger {
     ) -> PyJsonLogger {
         let log_config = config.unwrap_or_else(|| {
             // get default
-            LogConfig::new(None, None, None, None, None, None, None, None, None)
+            LogConfig::new(None, None, None, None, None, None, None, None)
         });
 
         let logger = RustLogger::new(&log_config, name);
@@ -44,5 +46,16 @@ impl PyJsonLogger {
 
     pub fn trace(&self, message: &str, metadata: Option<LogMetadata>) {
         self.logger.trace(message, metadata.as_ref());
+    }
+
+    pub fn __str__(&self) -> PyResult<String> {
+        let json = json!({
+            "type": "Logger",
+            "name": self.logger.name,
+            "level": self.logger.env,
+            "config": self.logger.config,
+        });
+
+        Ok(to_string_pretty(&json).unwrap())
     }
 }

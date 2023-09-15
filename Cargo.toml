@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 pyo3 = "0.19.0"
 tracing = "0.1.37"
 tracing-appender = "0.2.2"
-tracing-subscriber = {version = "0.3.17", features = ["json", "env-filter", "fmt", "std", "time"]}
+tracing-subscriber = {version = "0.3.17", features = ["json", "env-filter",]}
 serde = { version = "1.0.163", features = ["derive"] }
 tracing-core = "0.1.31"
-time = {version="0.3.28"}
+serde_json = "1.0.107"

@@ -1,25 +1,39 @@
 import glob
-from rusty_logger import JsonLogger, LogConfig, LogMetadata
+from rusty_logger import Logger, LogConfig, LogMetadata, JsonConfig
 import shutil
 import json
 
 
+def test_log_config():
+    config = LogConfig()
+    assert config.stdout is True
+    assert config.stderr is False
+    assert config.filename is None
+    assert config.level == "INFO"
+    assert config.app_env == "development"
+    assert config.target is False
+    assert config.line_number is False
+    assert config.json_config is None
+
+
 def test_info_logger_stdout():
-    logger = JsonLogger.get_logger(name=__file__)
+    logger = Logger.get_logger(name=__file__)
     logger.info("test info")
     logger.debug("test debug")
     logger.warning("test warning")
     logger.error("test error")
+    logger.trace("test trace")
 
 
 def test_debug_logger_file():
-    logger = JsonLogger.get_logger(
+    logger = Logger.get_logger(
         name=__file__,
         config=LogConfig(
             filename=f"log/test.log",
             level="DEBUG",
         ),
     )
+
     logger.info("test info")
     logger.debug("test debug")
     logger.warning("test warning")
@@ -37,17 +51,23 @@ def test_debug_logger_file():
 
 
 def test_warn_logger_file():
-    logger = JsonLogger.get_logger(
+    logger = Logger.get_logger(
         name=__file__,
         config=LogConfig(
             filename=f"log/test.log",
-            level="WARN",
+            level="TRACE",
+            line_number=True,
+            json_config=JsonConfig(
+                span=True,
+                flatten=True,
+            ),
         ),
     )
     logger.info("test info")
     logger.debug("test debug")
     logger.warning("test warning")
     logger.error("test error")
+    logger.trace("test error")
 
     assert glob.glob(f"log/test.log*")
 
@@ -56,12 +76,12 @@ def test_warn_logger_file():
             for count, line in enumerate(fp):
                 pass
             count = count + 1
-    assert count == 2
+    assert count == 5
     shutil.rmtree("log", ignore_errors=False)
 
 
 def test_error_logger_file():
-    logger = JsonLogger.get_logger(
+    logger = Logger.get_logger(
         name=__file__,
         config=LogConfig(
             filename=f"log/test.log",
@@ -101,7 +121,7 @@ def test_modules():
 
 
 def test_metadata():
-    logger = JsonLogger.get_logger(
+    logger = Logger.get_logger(
         name=__file__,
         config=LogConfig(
             filename=f"log/test.log",

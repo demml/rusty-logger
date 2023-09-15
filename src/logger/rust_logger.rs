@@ -4,12 +4,10 @@ use std::collections::HashMap;
 use std::env;
 use std::io;
 use std::path::Path;
-use time::format_description::FormatItem;
 use tracing_core::dispatcher::DefaultGuard;
 use tracing_subscriber::filter::EnvFilter;
 use tracing_subscriber::filter::LevelFilter;
 
-use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::fmt::MakeWriter;
 use tracing_subscriber::prelude::__tracing_subscriber_Layer;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
@@ -17,7 +15,7 @@ use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::Layer;
 
-#[pyclass]
+#[pyclass(dict)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct JsonConfig {
     #[pyo3(get, set)]
@@ -31,11 +29,15 @@ pub struct JsonConfig {
 #[allow(clippy::too_many_arguments)]
 impl JsonConfig {
     #[new]
-    pub fn new(span: Option<bool>, flatten: Option<bool>) -> JsonConfig {
+    pub fn new(span: Option<bool>, flatten: Option<bool>) -> Self {
         JsonConfig {
             span: span.unwrap_or(false),
             flatten: flatten.unwrap_or(true),
         }
+    }
+
+    pub fn __str__(&self) -> PyResult<String> {
+        Ok(serde_json::to_string_pretty(&self).unwrap())
     }
 }
 
@@ -55,16 +57,13 @@ pub struct LogConfig {
     pub level: String,
 
     #[pyo3(get, set)]
-    pub env: Option<String>,
+    pub app_env: Option<String>,
 
     #[pyo3(get, set)]
     pub target: bool,
 
     #[pyo3(get, set)]
     pub line_number: bool,
-
-    #[pyo3(get, set)]
-    pub time_format: Option<String>,
 
     #[pyo3(get, set)]
     pub json_config: Option<JsonConfig>,
@@ -80,35 +79,30 @@ impl LogConfig {
         stderr: Option<bool>,
         filename: Option<String>,
         level: Option<String>,
-        env: Option<String>,
+        app_env: Option<String>,
         target: Option<bool>,
         line_number: Option<bool>,
-        time_format: Option<String>,
         json_config: Option<JsonConfig>,
-    ) -> LogConfig {
-        let log_env = env.unwrap_or_else(|| match env::var("APP_ENV") {
+    ) -> Self {
+        let log_env = app_env.unwrap_or_else(|| match env::var("APP_ENV") {
             Ok(val) => val,
             Err(_e) => "development".to_string(),
         });
-        let time_format = time_format
-            .unwrap_or_else(|| "[year]-[month]-[day]T[hour]:[minute]:[second]".to_string());
-
-        let json_log_config = match json_config {
-            Some(val) => Some(val),
-            None => Some(JsonConfig::new(None, None)),
-        };
 
         LogConfig {
             stdout: stdout.unwrap_or(true),
             stderr: stderr.unwrap_or(false),
             filename,
             level: level.unwrap_or_else(|| "INFO".to_string()),
-            env: Some(log_env),
+            app_env: Some(log_env),
             target: target.unwrap_or(false),
             line_number: line_number.unwrap_or(false),
-            time_format: Some(time_format),
-            json_config: json_log_config,
+            json_config,
         }
+    }
+
+    pub fn __str__(&self) -> PyResult<String> {
+        Ok(serde_json::to_string_pretty(&self).unwrap())
     }
 }
 
@@ -125,11 +119,10 @@ impl LogMetadata {
     pub fn new(info: HashMap<String, String>) -> LogMetadata {
         LogMetadata { info }
     }
-}
 
-#[derive(Debug, Clone)]
-pub struct LoggTimer<'a> {
-    pub timer: UtcTime<Vec<FormatItem<'a>>>,
+    pub fn __str__(&self) -> PyResult<String> {
+        Ok(serde_json::to_string_pretty(&self).unwrap())
+    }
 }
 
 /// Get the name of the file
@@ -180,10 +173,12 @@ fn get_file_params(log_config: &LogConfig) -> (String, String) {
 /// * `name` - The name of the file
 ///
 ///
+#[derive(Debug)]
 #[allow(dead_code)]
 pub struct RustLogger {
     pub env: String,
     pub name: String,
+    pub config: LogConfig,
     guard: DefaultGuard,
 }
 
@@ -221,6 +216,7 @@ impl RustLogger {
             },
             name: file_name,
             guard,
+            config: log_config.clone(),
         }
     }
 
@@ -238,7 +234,6 @@ impl RustLogger {
     fn construct_json_layer<W2, S>(
         log_config: &LogConfig,
         writer: W2,
-        timer: UtcTime<Vec<FormatItem<'static>>>,
     ) -> Box<dyn __tracing_subscriber_Layer<S> + Send + Sync>
     where
         S: tracing_core::Subscriber,
@@ -254,7 +249,6 @@ impl RustLogger {
             .flatten_event(flatten)
             .with_current_span(span)
             .with_line_number(log_config.line_number.to_owned())
-            .with_timer(timer)
             .with_writer(writer)
             .boxed();
 
@@ -277,37 +271,18 @@ impl RustLogger {
     {
         let mut layers = Vec::new();
 
-        // set time format (applies to all layers)
-        let time_format =
-            time::format_description::parse("hello").expect("Failed to parse time format");
-        let log_timer = LoggTimer {
-            timer: UtcTime::new(time_format).to_owned(),
-        };
-
         if log_config.stdout {
-            layers.push(RustLogger::construct_json_layer(
-                log_config,
-                io::stdout,
-                log_timer.timer.clone(),
-            ));
+            layers.push(RustLogger::construct_json_layer(log_config, io::stdout));
         }
 
         if log_config.stderr {
-            layers.push(RustLogger::construct_json_layer(
-                log_config,
-                io::stderr,
-                log_timer.timer.clone(),
-            ));
+            layers.push(RustLogger::construct_json_layer(log_config, io::stderr));
         }
 
         if log_config.filename.is_some() {
             let (directory, file_name_prefix) = get_file_params(log_config);
             let file_appender = tracing_appender::rolling::hourly(directory, file_name_prefix);
-            layers.push(RustLogger::construct_json_layer(
-                log_config,
-                file_appender,
-                log_timer.timer.clone(),
-            ));
+            layers.push(RustLogger::construct_json_layer(log_config, file_appender));
         }
 
         layers
@@ -316,7 +291,6 @@ impl RustLogger {
     fn construct_cmd_layer<W2, S>(
         log_config: &LogConfig,
         writer: W2,
-        timer: UtcTime<Vec<FormatItem<'static>>>,
     ) -> Box<dyn __tracing_subscriber_Layer<S> + Send + Sync>
     where
         S: tracing_core::Subscriber,
@@ -326,7 +300,6 @@ impl RustLogger {
         let layer = tracing_subscriber::fmt::layer()
             .with_target(log_config.target)
             .with_line_number(log_config.line_number)
-            .with_timer(timer)
             .with_writer(writer)
             .boxed();
 
@@ -349,38 +322,21 @@ impl RustLogger {
     {
         let mut layers = Vec::new();
         // set time format (applies to all layers)
-        let time_format =
-            time::format_description::parse("hello").expect("Failed to parse time format");
-        let log_timer = LoggTimer {
-            timer: UtcTime::new(time_format).to_owned(),
-        };
 
         if log_config.stdout {
             let writer = io::stdout;
-            layers.push(RustLogger::construct_cmd_layer(
-                log_config,
-                writer,
-                log_timer.timer.clone(),
-            ));
+            layers.push(RustLogger::construct_cmd_layer(log_config, writer));
         }
 
         if log_config.stderr {
             let writer = io::stderr;
-            layers.push(RustLogger::construct_cmd_layer(
-                log_config,
-                writer,
-                log_timer.timer.clone(),
-            ));
+            layers.push(RustLogger::construct_cmd_layer(log_config, writer));
         }
 
         if log_config.filename.is_some() {
             let (directory, file_name_prefix) = get_file_params(log_config);
             let writer = tracing_appender::rolling::hourly(directory, file_name_prefix);
-            layers.push(RustLogger::construct_cmd_layer(
-                log_config,
-                writer,
-                log_timer.timer.clone(),
-            ));
+            layers.push(RustLogger::construct_cmd_layer(log_config, writer));
         }
 
         layers
@@ -508,11 +464,10 @@ mod tests {
             stderr,
             filename: None,
             level,
-            env: None,
+            app_env: None,
             target: false,
             json_config: Some(JsonConfig::new(None, None)),
             line_number: false,
-            time_format: None,
         }
     }
 

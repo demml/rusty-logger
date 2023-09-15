@@ -1,7 +1,11 @@
 from typing import Optional, Dict
 
 class JsonConfig:
-    def __init__(self, span: bool, flatten: bool):
+    def __init__(
+        self,
+        span: bool = False,
+        flatten: bool = True,
+    ):
         """Creates logger json configuration
 
         Args:
@@ -11,6 +15,14 @@ class JsonConfig:
                 Whether to flatten the any fields that are passed.
         """
         ...
+    @property
+    def span(self) -> bool:
+        """Whether to log span information."""
+        ...
+    @property
+    def flatten(self) -> bool:
+        """Whether to flatten the any fields that are passed."""
+        ...
 
 class LogConfig:
     def __init__(
@@ -19,10 +31,9 @@ class LogConfig:
         stderr: bool = False,
         filename: Optional[str] = None,
         level: str = "INFO",
-        env: Optional[str] = None,
+        app_env: Optional[str] = "development",
         target: bool = False,
         line_number: bool = False,
-        time_format: Optional[str] = None,
         json_config: Optional[JsonConfig] = None,
     ):
         """Creates logger configuration
@@ -43,12 +54,42 @@ class LogConfig:
                 Whether to log target information.
             line_number:
                 Whether to log line number information.
-            time_format:
-                The time format to use for logs. Defaults to "[year]-[month]-[day]T[hour]:[minute]:[second]".
-                For more information on time formats, see https://time-rs.github.io/book/api/well-known-format-descriptions.html
             json_config:
                 Optional json logger configuration.
         """
+        ...
+    @property
+    def stdout(self) -> bool:
+        """Whether to log to stdout."""
+        ...
+    @property
+    def stderr(self) -> bool:
+        """Whether to log to stderr."""
+        ...
+    @property
+    def filename(self) -> Optional[str]:
+        """Optional name of log file to write to. Can be a path (logs/test.log)
+        or just a name (test.log)."""
+        ...
+    @property
+    def level(self) -> str:
+        """The level to log at."""
+        ...
+    @property
+    def app_env(self) -> Optional[str]:
+        """The environment name to associate with logs. Defaults to "development"."""
+        ...
+    @property
+    def target(self) -> bool:
+        """Whether to log target information."""
+        ...
+    @property
+    def line_number(self) -> bool:
+        """Whether to log line number information."""
+        ...
+    @property
+    def json_config(self) -> Optional[JsonConfig]:
+        """Optional json logger configuration."""
         ...
 
 class LogMetadata:
@@ -59,6 +100,10 @@ class LogMetadata:
             init:
                 The metadata to associate with logs.
         """
+        ...
+    @property
+    def info(self) -> Dict[str, str]:
+        """The metadata to associate with logs."""
         ...
 
 class Logger:
@@ -86,6 +131,8 @@ class Logger:
         Args:
             message:
                 The message to log.
+            metadata:
+                Optional metadata to associate with the log.
         """
         ...
     def debug(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
@@ -94,6 +141,8 @@ class Logger:
         Args:
             message:
                 The message to log.
+            metadata:
+                Optional metadata to associate with the log.
         """
         ...
     def warning(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
@@ -102,6 +151,8 @@ class Logger:
         Args:
             message:
                 The message to log.
+            metadata:
+                Optional metadata to associate with the log.
         """
         ...
     def error(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
@@ -110,5 +161,17 @@ class Logger:
         Args:
             message:
                 The message to log.
+            metadata:
+                Optional metadata to associate with the log.
+        """
+        ...
+    def trace(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
+        """Logs a message at the TRACE level.
+
+        Args:
+            message:
+                The message to log.
+            metadata:
+                Optional metadata to associate with the log.
         """
         ...
