@@ -10,7 +10,6 @@ use tracing_subscriber::layer::Layered;
 
 use colored::Colorize;
 use time::format_description::FormatItem;
-use tracing::info;
 use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::fmt::MakeWriter;
 use tracing_subscriber::prelude::__tracing_subscriber_Layer;
@@ -101,22 +100,22 @@ impl LogConfig {
             },
         };
 
-        let stdout = stdout.unwrap_or_else(|| false);
-        let stderr = stderr.unwrap_or_else(|| false);
+        let stdout = stdout.unwrap_or(false);
+        let stderr = stderr.unwrap_or(false);
         let filename_null = filename.is_some();
 
-        let stdout = if stdout && stderr && filename_null {
+        let stdout = if !stdout && !stderr && !filename_null {
             let msg = format!(
                 "{}: {}",
                 "Invalid log config".bold().red(),
                 "No output specified"
             );
-            info!(msg);
-            info!("Defaulting to stdout");
+            tracing::warn!(msg);
+            tracing::warn!("Defaulting to stdout");
 
             true
         } else {
-            true
+            stdout
         };
 
         LogConfig {
@@ -225,8 +224,8 @@ impl RustLogger {
 
         // handle invalid user time format
         let time_format = time_format_result.unwrap_or_else(|error| {
-            println!("{}: {}", "Invalid time format:".bold().red(), error);
-            println!("Defaulting to pattern: {}", DEFAULT_TIME_PATTERN.green());
+            tracing::warn!("{}: {}", "Invalid time format:".bold().red(), error);
+            tracing::warn!("Defaulting to pattern: {}", DEFAULT_TIME_PATTERN.green());
 
             time::format_description::parse(DEFAULT_TIME_PATTERN).unwrap()
         });
