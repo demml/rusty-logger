@@ -103,10 +103,6 @@ impl LogConfig {
         let stderr = stderr.unwrap_or(false);
         let filename_null = filename.is_some();
 
-        println!("filename: {:?}", !filename_null);
-        println!("stdout: {:?}", !stdout);
-        println!("stderr: {:?}", !stderr);
-
         let stdout = if !stdout && !stderr && !filename_null {
             let msg = format!(
                 "{}: {}. {}",

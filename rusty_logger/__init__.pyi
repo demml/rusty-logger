@@ -107,7 +107,7 @@ class LogMetadata:
         """Creates logger metadata
 
         Args:
-            init:
+            info:
                 The metadata to associate with logs.
         """
         ...
