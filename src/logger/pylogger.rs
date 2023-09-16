@@ -38,6 +38,8 @@ impl LogLevel {
 #[pyclass(name = "Logger", subclass)]
 pub struct PyJsonLogger {
     logger: RustLogger,
+
+    #[pyo3(get, set)]
     pub config: LogConfig,
 }
 

@@ -150,3 +150,18 @@ def test_metadata():
 
         assert "test" in result
         shutil.rmtree("log", ignore_errors=False)
+
+
+def test_invalid_config_format():
+    logger = Logger.get_logger(
+        __file__,
+        config=LogConfig(
+            stderr=False,
+            stdout=False,
+            filename=None,
+            time_format="[hour]:[minute]",
+        ),
+    )
+
+    assert logger.config.stdout == True
+    logger.info("blah")

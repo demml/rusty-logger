@@ -8,7 +8,7 @@ use tracing_core::dispatcher::DefaultGuard;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::Layered;
 
-use colored::Colorize;
+use owo_colors::OwoColorize;
 use time::format_description::FormatItem;
 use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::fmt::MakeWriter;
@@ -81,7 +81,6 @@ pub struct LogConfig {
 impl LogConfig {
     // py init
     #[new]
-    #[tracing::instrument]
     pub fn new(
         stdout: Option<bool>,
         stderr: Option<bool>,
@@ -104,14 +103,18 @@ impl LogConfig {
         let stderr = stderr.unwrap_or(false);
         let filename_null = filename.is_some();
 
+        println!("filename: {:?}", !filename_null);
+        println!("stdout: {:?}", !stdout);
+        println!("stderr: {:?}", !stderr);
+
         let stdout = if !stdout && !stderr && !filename_null {
             let msg = format!(
-                "{}: {}",
-                "Invalid log config".bold().red(),
-                "No output specified"
+                "{}: {}. {}",
+                "Invalid LogConfig".bold().red(),
+                "No output specified",
+                "Defaulting to stdout".green(),
             );
-            tracing::warn!(msg);
-            tracing::warn!("Defaulting to stdout");
+            println!("{}", msg);
 
             true
         } else {
@@ -126,7 +129,6 @@ impl LogConfig {
             app_env: log_env,
             target: target.unwrap_or(false),
             time_format: time_format.unwrap_or_else(|| DEFAULT_TIME_PATTERN.to_string()),
-
             json_config,
         }
     }
@@ -223,9 +225,10 @@ impl RustLogger {
         let time_format_result = time::format_description::parse(Box::leak(time).as_str());
 
         // handle invalid user time format
+        // Very rare that this would fail but let's handle it anyway
         let time_format = time_format_result.unwrap_or_else(|error| {
-            tracing::warn!("{}: {}", "Invalid time format:".bold().red(), error);
-            tracing::warn!("Defaulting to pattern: {}", DEFAULT_TIME_PATTERN.green());
+            println!("{}: {}", "Invalid time format:".bold().red(), error);
+            println!("Defaulting to pattern: {}", DEFAULT_TIME_PATTERN.green());
 
             time::format_description::parse(DEFAULT_TIME_PATTERN).unwrap()
         });

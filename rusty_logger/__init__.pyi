@@ -135,6 +135,10 @@ class Logger:
             A `JsonLogger` instance.
         """
         ...
+    @property
+    def config(self) -> LogConfig:
+        """The configuration for the logger."""
+        ...
     def set_level(self, level: str) -> None:
         """Sets the log level of the logger.
 
