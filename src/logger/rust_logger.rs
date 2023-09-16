@@ -8,8 +8,9 @@ use tracing_core::dispatcher::DefaultGuard;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::Layered;
 
-use lazy_static::lazy_static;
-use std::sync::Mutex;
+use colored::Colorize;
+use time::format_description::FormatItem;
+use tracing::info;
 use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::fmt::MakeWriter;
 use tracing_subscriber::prelude::__tracing_subscriber_Layer;
@@ -20,9 +21,8 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::Layer;
 use tracing_subscriber::Registry;
 
-lazy_static! {
-    static ref TIME_FORMAT_HOLDER: Mutex<Vec<String>> = Mutex::new(vec![]);
-}
+static DEFAULT_TIME_PATTERN: &str =
+    "[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]";
 
 type ReloadHandle =
     reload::Handle<LevelFilter, Layered<Vec<Box<dyn Layer<Registry> + Send + Sync>>, Registry>>;
@@ -65,7 +65,7 @@ pub struct LogConfig {
     pub level: String,
 
     #[pyo3(get, set)]
-    pub app_env: Option<String>,
+    pub app_env: String,
 
     #[pyo3(get, set)]
     pub target: bool,
@@ -82,6 +82,7 @@ pub struct LogConfig {
 impl LogConfig {
     // py init
     #[new]
+    #[tracing::instrument]
     pub fn new(
         stdout: Option<bool>,
         stderr: Option<bool>,
@@ -92,22 +93,40 @@ impl LogConfig {
         time_format: Option<String>,
         json_config: Option<JsonConfig>,
     ) -> Self {
-        let log_env = app_env.unwrap_or_else(|| match env::var("APP_ENV") {
-            Ok(val) => val,
-            Err(_e) => "development".to_string(),
-        });
+        let log_env = match app_env {
+            Some(val) => val,
+            None => match env::var("APP_ENV") {
+                Ok(val) => val,
+                Err(_e) => "development".to_string(),
+            },
+        };
+
+        let stdout = stdout.unwrap_or_else(|| false);
+        let stderr = stderr.unwrap_or_else(|| false);
+        let filename_null = filename.is_some();
+
+        let stdout = if stdout && stderr && filename_null {
+            let msg = format!(
+                "{}: {}",
+                "Invalid log config".bold().red(),
+                "No output specified"
+            );
+            info!(msg);
+            info!("Defaulting to stdout");
+
+            true
+        } else {
+            true
+        };
 
         LogConfig {
-            stdout: stdout.unwrap_or(true),
-            stderr: stderr.unwrap_or(false),
+            stdout,
+            stderr,
             filename,
             level: level.unwrap_or_else(|| "INFO".to_string()),
-            app_env: Some(log_env),
+            app_env: log_env,
             target: target.unwrap_or(false),
-            time_format: time_format.unwrap_or_else(|| {
-                "[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]"
-                    .to_string()
-            }),
+            time_format: time_format.unwrap_or_else(|| DEFAULT_TIME_PATTERN.to_string()),
 
             json_config,
         }
@@ -200,6 +219,21 @@ pub struct RustLogger {
 }
 
 impl RustLogger {
+    pub fn get_timer(time_format: String) -> UtcTime<Vec<FormatItem<'static>>> {
+        let time = Box::new(time_format);
+        let time_format_result = time::format_description::parse(Box::leak(time).as_str());
+
+        // handle invalid user time format
+        let time_format = time_format_result.unwrap_or_else(|error| {
+            println!("{}: {}", "Invalid time format:".bold().red(), error);
+            println!("Defaulting to pattern: {}", DEFAULT_TIME_PATTERN.green());
+
+            time::format_description::parse(DEFAULT_TIME_PATTERN).unwrap()
+        });
+
+        UtcTime::new(time_format)
+    }
+
     pub fn get_level_filter(level: &str) -> LevelFilter {
         match level {
             "DEBUG" => LevelFilter::DEBUG,
@@ -268,10 +302,7 @@ impl RustLogger {
         for<'a> S: LookupSpan<'a>,
     {
         let flatten = log_config.json_config.as_ref().unwrap().flatten;
-
-        let time = Box::new(log_config.time_format.clone());
-        let time_format = time::format_description::parse(Box::leak(time).as_str()).unwrap();
-        let timer = UtcTime::new(time_format);
+        let timer = RustLogger::get_timer(log_config.time_format.clone());
 
         let layer = tracing_subscriber::fmt::layer()
             .with_target(log_config.target)
@@ -326,10 +357,7 @@ impl RustLogger {
         W2: for<'writer> MakeWriter<'writer> + 'static + Send + Sync,
         for<'a> S: LookupSpan<'a>,
     {
-        let time = Box::new(log_config.time_format.clone());
-        let time_format = time::format_description::parse(Box::leak(time).as_str()).unwrap();
-        let timer = UtcTime::new(time_format);
-
+        let timer = RustLogger::get_timer(log_config.time_format.clone());
         let layer = tracing_subscriber::fmt::layer()
             .with_target(log_config.target)
             .with_timer(timer)
@@ -497,11 +525,24 @@ mod tests {
             stderr,
             filename: None,
             level,
-            app_env: None,
+            app_env: "development".to_string(),
             target: false,
             time_format:
                 "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
                     .to_string(),
+            json_config: Some(JsonConfig::new(None)),
+        }
+    }
+
+    fn generate_test_incorrect_config(level: String, stdout: bool, stderr: bool) -> LogConfig {
+        LogConfig {
+            stdout,
+            stderr,
+            filename: None,
+            level,
+            app_env: "development".to_string(),
+            target: false,
+            time_format: "blah-blah-blah".to_string(),
             json_config: Some(JsonConfig::new(None)),
         }
     }
@@ -537,5 +578,16 @@ mod tests {
             logger.error("test", Some(&metadata));
             logger.trace("test", Some(&metadata));
         });
+    }
+
+    #[test]
+    fn test_incorrect_date_format() {
+        let metadata = LogMetadata {
+            info: std::collections::HashMap::from([("Mercury".to_string(), "Mercury".to_string())]),
+        };
+
+        let config = generate_test_incorrect_config("INFO".to_string(), false, true);
+        let logger = RustLogger::new(&config, None);
+        logger.info("test", Some(&metadata));
     }
 }
