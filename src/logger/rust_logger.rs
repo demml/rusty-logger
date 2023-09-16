@@ -538,13 +538,15 @@ mod tests {
 
     fn generate_test_incorrect_config(level: String, stdout: bool, stderr: bool) -> LogConfig {
         LogConfig {
-            stdout,
-            stderr,
+            stdout: false,
+            stderr: false,
             filename: None,
             level,
             app_env: "development".to_string(),
             target: false,
-            time_format: "blah-blah-blah".to_string(),
+            time_format:
+                "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
+                    .to_string(),
             json_config: Some(JsonConfig::new(None)),
         }
     }
@@ -583,7 +585,7 @@ mod tests {
     }
 
     #[test]
-    fn test_incorrect_date_format() {
+    fn test_invalid_output() {
         let metadata = LogMetadata {
             info: std::collections::HashMap::from([("Mercury".to_string(), "Mercury".to_string())]),
         };
