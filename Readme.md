@@ -29,7 +29,7 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 | `filename`  | Log to file  | `None` |
 | `level`  | Level to log  | `INFO` |
 | `app_env`  | Application environment (APP_ENV env var)  | `development` |
-| 'time_format' | Custom time format for logger | [year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4] |
+| `time_format` | Custom time format for logger | `[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]` |
 | `json_config`  | `JsonCofig`  | `None` |
 | `json_config.flatten`  | Whether to flatten any passed fields  | `True` |
 
