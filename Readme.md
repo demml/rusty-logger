@@ -29,16 +29,17 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 | `filename`  | Log to file  | `None` |
 | `level`  | Level to log  | `INFO` |
 | `app_env`  | Application environment (APP_ENV env var)  | `development` |
+| `time_format` | Custom time format for logger | `[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]` |
 | `json_config`  | `JsonCofig`  | `None` |
 | `json_config.flatten`  | Whether to flatten any passed fields  | `True` |
 
 ## Constraints
-Due to some limitations with how time can be formatted within the `tracing` library, `Rusty-Logger` implements UTC time only. In addition, because `Rusty-Logger` calls `Rust` directly, it's not currently possible to pull the specific line number where logging takes place unless python is directly used (if you're even interested in this feature :smile:). If you'd like to see these features (line number and time formatting) implemented, and you want to contribute, please see the [contributing](https://github.com/thorrester/rusty-logger/blob/main/CONTRIBUTING.md) guide.
+
+Time is currently limited to UTC; however, you can customize time format to your liking using the `time_format` arg. Please refer to (time docs)[https://time-rs.github.io/book/api/format-description.html] for formatting guidelines. In addition, because `Rusty-Logger` calls `Rust` directly, it's not currently possible to pull the specific line number where logging takes place unless python is directly used (if you're even interested in this feature :smile:). If you'd like to see this feature implemented, and you want to contribute, please refer to the [contributing](https://github.com/thorrester/rusty-logger/blob/main/CONTRIBUTING.md) guide.
 
 ## Additional Metadata
 
 You may also pass additional metadata along with any logging messages via the `LogMetadata` class, which takes a `Dict[str, str]` as an argument. 
-
 
 ## Show Me The Code!
 
@@ -47,7 +48,6 @@ You may also pass additional metadata along with any logging messages via the `L
 ```python
 from rusty_logger import Logger
 
-# defaults to stdout and INFO level
 logger = Logger.get_logger(__file__)
 logger.info("his palms are sweaty")
 ```
@@ -62,7 +62,6 @@ output
 ```python
 from rusty_logger import Logger, LogConfig, JsonConfig
 
-# defaults to stdout and INFO level
 logger = Logger.get_logger(__file__, LogConfig(json_config=JsonConfig()))
 logger.info("knees weak")
 ```
@@ -100,7 +99,7 @@ output from `log/test.log`
 from rusty_logger import Logger, LogConfig, JsonConfig, LogMetadata
 
 logger = Logger.get_logger(__file__, LogConfig(json_config=JsonConfig()))
-metadata = LogMetadata(info={"there's": "vomit"})
+metadata = LogMetadata(data={"there's": "vomit"})
 logger.info("on his sweater already", metadata=metadata)
 ```
 

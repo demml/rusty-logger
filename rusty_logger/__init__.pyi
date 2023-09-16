@@ -49,6 +49,7 @@ class LogConfig:
         filename: Optional[str] = None,
         level: str = "INFO",
         app_env: Optional[str] = "development",
+        time_format: Optional[str] = "[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]",
         json_config: Optional[JsonConfig] = None,
     ):
         """Creates logger configuration
@@ -65,22 +66,24 @@ class LogConfig:
                 The level to log at.
             app_env:
                 The environment name to associate with logs. Defaults to "development"
+            time_format:
+                The time format to use for logs.
             json_config:
                 Optional json logger configuration.
         """
         ...
     @property
     def stdout(self) -> bool:
-        """Whether to log to stdout."""
+        """Whether to log to stdout"""
         ...
     @property
     def stderr(self) -> bool:
-        """Whether to log to stderr."""
+        """Whether to log to stderr"""
         ...
     @property
     def filename(self) -> Optional[str]:
         """Optional name of log file to write to. Can be a path (logs/test.log)
-        or just a name (test.log)."""
+        or just a name (test.log)"""
         ...
     @property
     def level(self) -> str:
@@ -88,24 +91,28 @@ class LogConfig:
         ...
     @property
     def app_env(self) -> Optional[str]:
-        """The environment name to associate with logs. Defaults to "development"."""
+        """The environment name to associate with logs. Defaults to "development"""
+        ...
+    @property
+    def time_format(self) -> Optional[str]:
+        """The time format to use for logs"""
         ...
     @property
     def json_config(self) -> Optional[JsonConfig]:
-        """Optional json logger configuration."""
+        """Optional json logger configuration"""
         ...
 
 class LogMetadata:
-    def __init__(self, info: Dict[str, str]):
+    def __init__(self, data: Dict[str, str]):
         """Creates logger metadata
 
         Args:
-            init:
+            data:
                 The metadata to associate with logs.
         """
         ...
     @property
-    def info(self) -> Dict[str, str]:
+    def data(self) -> Dict[str, str]:
         """The metadata to associate with logs."""
         ...
 
@@ -127,6 +134,10 @@ class Logger:
         Returns:
             A `JsonLogger` instance.
         """
+        ...
+    @property
+    def config(self) -> LogConfig:
+        """The configuration for the logger."""
         ...
     def set_level(self, level: str) -> None:
         """Sets the log level of the logger.
