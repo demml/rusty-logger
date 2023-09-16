@@ -304,9 +304,11 @@ checksum = "dbb5fb1acd8a1a18b3dd5be62d25485eb770e05afb408a9627d14d451bae12da"
 name = "rusty-logger"
 version = "0.1.0"
 dependencies = [
+ "lazy_static",
  "pyo3",
  "serde",
  "serde_json",
+ "time",
  "tracing",
  "tracing-appender",
  "tracing-core",
@@ -517,6 +519,7 @@ dependencies = [
  "sharded-slab",
  "smallvec",
  "thread_local",
+ "time",
  "tracing",
  "tracing-core",
  "tracing-log",

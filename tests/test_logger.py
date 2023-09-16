@@ -85,6 +85,7 @@ def test_warn_logger_file():
             count = count + 1
     assert count == 5
     shutil.rmtree("log", ignore_errors=False)
+    a
 
 
 def test_error_logger_file():
