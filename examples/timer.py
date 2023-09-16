@@ -14,8 +14,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
-# Create a logger with default configuration
-# Pushes logs to stdout at INFO level
 logger = Logger.get_logger(
     name=__file__,
     config=LogConfig(
