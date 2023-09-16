@@ -536,12 +536,12 @@ mod tests {
         }
     }
 
-    fn generate_test_incorrect_config(level: String, stdout: bool, stderr: bool) -> LogConfig {
+    fn generate_test_incorrect_config() -> LogConfig {
         LogConfig {
             stdout: false,
             stderr: false,
             filename: None,
-            level,
+            level: "INFO".to_string(),
             app_env: "development".to_string(),
             target: false,
             time_format:
@@ -590,7 +590,7 @@ mod tests {
             info: std::collections::HashMap::from([("Mercury".to_string(), "Mercury".to_string())]),
         };
 
-        let config = generate_test_incorrect_config("INFO".to_string(), false, true);
+        let config = generate_test_incorrect_config();
         let logger = RustLogger::new(&config, None);
         logger.info("test", Some(&metadata));
     }
