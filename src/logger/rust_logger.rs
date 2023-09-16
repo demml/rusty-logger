@@ -142,14 +142,14 @@ impl LogConfig {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogMetadata {
     #[pyo3(get, set)]
-    pub info: HashMap<String, String>,
+    pub data: HashMap<String, String>,
 }
 
 #[pymethods]
 impl LogMetadata {
     #[new]
-    pub fn new(info: HashMap<String, String>) -> LogMetadata {
-        LogMetadata { info }
+    pub fn new(data: HashMap<String, String>) -> LogMetadata {
+        LogMetadata { data }
     }
 
     pub fn __str__(&self) -> PyResult<String> {
@@ -434,7 +434,7 @@ impl RustLogger {
                 message = message,
                 app_env = self.env,
                 name = self.name,
-                info = ?val.info
+                info = ?val.data
             ),
             None => tracing::info!(message = message, app_env = self.env, name = self.name),
         };
@@ -452,7 +452,7 @@ impl RustLogger {
                 message = message,
                 app_env = self.env,
                 name = self.name,
-                info = ?val.info
+                info = ?val.data
             ),
             None => tracing::debug!(message = message, app_env = self.env, name = self.name),
         };
@@ -470,7 +470,7 @@ impl RustLogger {
                 message = message,
                 app_env = self.env,
                 name = self.name,
-                info = ?val.info
+                info = ?val.data
             ),
             None => tracing::warn!(message = message, app_env = self.env, name = self.name),
         };
@@ -488,7 +488,7 @@ impl RustLogger {
                 message = message,
                 app_env = self.env,
                 name = self.name,
-                info = ?val.info
+                info = ?val.data
             ),
             None => tracing::error!(message = message, app_env = self.env, name = self.name),
         };
@@ -506,7 +506,7 @@ impl RustLogger {
                 message = message,
                 app_env = self.env,
                 name = self.name,
-                info = ?val.info
+                info = ?val.data
             ),
             None => tracing::trace!(message = message, app_env = self.env, name = self.name),
         };
@@ -566,7 +566,7 @@ mod tests {
     fn test_stderr_logger() {
         let levels = ["INFO", "DEBUG", "WARN", "ERROR", "TRACE"];
         let metadata = LogMetadata {
-            info: std::collections::HashMap::from([("Mercury".to_string(), "Mercury".to_string())]),
+            data: std::collections::HashMap::from([("Mercury".to_string(), "Mercury".to_string())]),
         };
 
         levels.iter().for_each(|level| {
@@ -583,7 +583,7 @@ mod tests {
     #[test]
     fn test_invalid_output() {
         let metadata = LogMetadata {
-            info: std::collections::HashMap::from([("Mercury".to_string(), "Mercury".to_string())]),
+            data: std::collections::HashMap::from([("Mercury".to_string(), "Mercury".to_string())]),
         };
 
         let config = generate_test_incorrect_config();

@@ -138,7 +138,7 @@ def test_metadata():
         ),
     )
 
-    logger.info("test info", metadata=LogMetadata(info={"test": "info"}))
+    logger.info("test info", metadata=LogMetadata(data={"test": "info"}))
 
     for name in glob.glob(f"log/test.log*"):
         with open(name, "r") as fp:

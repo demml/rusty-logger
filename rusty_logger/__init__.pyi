@@ -103,16 +103,16 @@ class LogConfig:
         ...
 
 class LogMetadata:
-    def __init__(self, info: Dict[str, str]):
+    def __init__(self, data: Dict[str, str]):
         """Creates logger metadata
 
         Args:
-            info:
+            data:
                 The metadata to associate with logs.
         """
         ...
     @property
-    def info(self) -> Dict[str, str]:
+    def data(self) -> Dict[str, str]:
         """The metadata to associate with logs."""
         ...
 
