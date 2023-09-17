@@ -17,5 +17,3 @@ coverage:
         target: 70%
         threshold: 10% 
         if_ci_failed: error #success, failure, error, ignore
-
-
