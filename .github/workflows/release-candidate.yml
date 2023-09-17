@@ -1,0 +1,46 @@
+
+name: Release Candidate
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches:
+      - release-candidate
+
+permissions:
+  contents: read
+
+jobs:
+  release-candidate:
+    name: Release Candidate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry==1.5.1
+
+      - name: set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: 'poetry'
+
+      - name: Create virtual environment
+        run: |
+          python -m venv .venv
+          echo "$GITHUB_WORKSPACE/rusty-logger/.venv/bin" >> $GITHUB_PATH
+
+      - name: Make release candidate
+        run : make prep.pre.patch
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: wheels
+      - name: Publish to PyPI
+        uses: PyO3/maturin-action@v1
+        env:
+          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        with:
+          command: upload
+          args: --non-interactive --skip-existing *
