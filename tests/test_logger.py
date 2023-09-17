@@ -1,9 +1,11 @@
 import glob
-from rusty_logger import Logger, LogConfig, LogMetadata, JsonConfig, LogLevel
-import logging
+from rusty_logger import Logger, LogConfig, LogMetadata, JsonConfig, LogLevel, __version__
 import shutil
 import json
-import timeit
+
+
+def test_version():
+    assert __version__ is not None
 
 
 def test_log_config():

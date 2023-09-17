@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rusty_logger"
-version = "0.1.0"
+version = "0.0.0"
 description = "Rust-based python logger"
 authors = ["Thorrester <48217609+thorrester@users.noreply.github.com>"]
 
