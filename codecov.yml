@@ -2,7 +2,7 @@ comment: false
 
 ignore:
   - "tests"
-  - "rusty_logger.version"
+  - "rusty_logger/version.py"
 
 coverage:
   range: "70...100"
