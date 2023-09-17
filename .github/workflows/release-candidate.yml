@@ -34,9 +34,13 @@ jobs:
       - name: Make release candidate
         run : make prep.pre.patch
 
-      - uses: actions/download-artifact@v3
+      - name: Download wheels for release
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
         with:
+          workflow: CI.yml
           name: wheels
+
       - name: Publish to PyPI
         uses: PyO3/maturin-action@v1
         env:
