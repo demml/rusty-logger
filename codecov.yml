@@ -2,6 +2,7 @@ comment: false
 
 ignore:
   - "tests"
+  - "rusty_logger.version"
 
 coverage:
   range: "70...100"
