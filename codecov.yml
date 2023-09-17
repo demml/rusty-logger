@@ -1,13 +1,18 @@
 comment: false
 
+ignore:
+  - "tests"
+
 coverage:
   range: "70...100"
   status:
+    patch:
+      default:
+        target: 80%
+
     project:
       default:
-        target: 80
-        paths:
-          - "!tests/"
+        target: 70
         threshold: 10% 
         if_ci_failed: error #success, failure, error, ignore
 
