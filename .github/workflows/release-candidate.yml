@@ -192,9 +192,7 @@ jobs:
             set -x
             python3 -m venv venv
             source venv/bin/activate
-            python3 -m pip install poetry==1.5.1
-            python3 -m poetry export --without-hashes --format=requirements.txt > requirements.txt --with dev
-            python3 -m pip install -r requirements.txt
+            python3 -m pip install -r tests/requirements.txt
             python3 -m pip install rusty_logger --no-index --no-deps --find-links dist --force-reinstall
             python3 -m pytest
             python3 -c 'import rusty_logger; print(rusty_logger.__version__)'
@@ -211,8 +209,6 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry==1.5.1
 
       - name: set up python
         uses: actions/setup-python@v4
@@ -230,6 +226,6 @@ jobs:
           name: pypi_files
           path: dist
 
-      - run: poetry install --all-extras --with dev
-      - run: poetry add rusty_logger --no-index --no-deps --find-links dist --force-reinstall
-      - run: poetry run pytest
+      - run: pip install -r tests/requirements.txt
+      - run: pip install rusty_logger --no-index --no-deps --find-links dist --force-reinstall
+      - run: pytest
