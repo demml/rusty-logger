@@ -81,7 +81,7 @@ build-backend = "maturin"
 
 [project]
 name = "rusty-logger"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -102,4 +102,7 @@ classifiers = [
 
 
 [tool.maturin]
+python-source = "python"
+module-name = "rusty_logger._rusty_logger"
+bindings = 'pyo3'
 features = ["pyo3/extension-module"]
