@@ -1,6 +1,6 @@
 PROJECT=rusty-logger
 PYTHON_VERSION=3.11.2
-SOURCE_OBJECTS=rusty_logger
+SOURCE_OBJECTS=python/rusty_logger
 
 
 format.black:
