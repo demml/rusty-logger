@@ -18,7 +18,7 @@ logger = Logger.get_logger(
     name=__file__,
     config=LogConfig(
         stdout=False,
-        level=LogLevel.INFO,
+        level=LogLevel.DEBUG,
         filename="logs/rust_log.log",
     ),
 )
@@ -29,6 +29,6 @@ py_result = timeit.timeit(stmt='logging.info("test info")', globals=globals(), n
 
 print(f"Rust: {rust_result}")
 print(f"Python: {py_result}")
-print(f"Rust logger is {py_result / rust_result} times faster than Python default logger")
+print(f"Rust logger is {py_result / rust_result} times faster than Python default logger when logging to file")
 
-shutil.rmtree("logs", ignore_errors=False)
+shutil.rmtree("logs", ignore_errors=True)
