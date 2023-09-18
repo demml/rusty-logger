@@ -2,8 +2,11 @@ name: Release Candidate
 
 on:
 
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+  #release:
+    #ypes: [published]
 
 permissions:
   contents: read
@@ -375,6 +378,7 @@ jobs:
       - name: install rust stable
         uses: dtolnay/rust-toolchain@stable
       - run: |
+          cargo pkgid | cut -d "#" -f2
           export VERSION=$(cargo pkgid | cut -d "#" -f2)
           test "v$VERSION" "=" "$GITHUB_REF_NAME"
 
