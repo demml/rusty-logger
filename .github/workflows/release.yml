@@ -2,11 +2,8 @@ name: Release Candidate
 
 on:
 
-  push:
-    branches:
-      - main
-  #release:
-    #ypes: [published]
+  release:
+    types: [published]
 
 permissions:
   contents: read
