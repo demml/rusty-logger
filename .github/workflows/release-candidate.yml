@@ -55,7 +55,7 @@ jobs:
           - os: windows
             ls: dir
             target: aarch64
-            interpreter: 3.11 3.12
+            interpreter: 3.11
           - os: macos
             target: aarch64
             interpreter: 3.9 3.10 3.11
@@ -106,7 +106,7 @@ jobs:
           architecture: ${{ matrix.python-architecture || 'x64' }}
 
       - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
-      
+
       - name: build wheels
         uses: PyO3/maturin-action@v1
         with:
