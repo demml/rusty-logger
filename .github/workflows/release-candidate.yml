@@ -7,7 +7,6 @@ on:
     branches:
       - release-candidate
   push:
-
 permissions:
   contents: read
 
