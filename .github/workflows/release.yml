@@ -1,9 +1,6 @@
 name: Release Candidate
 
 on:
-  workflow_run:
-    workflows: [Lints-Tests]
-    types: [completed]
 
   release:
     types: [published]
@@ -14,9 +11,82 @@ permissions:
 env:
   PACKAGE_NAME: rusty_logger
   INTERPRETER: '3.9 3.10 3.11'
+  RUSTFLAGS: -C debuginfo=0
 
 jobs:
+  rust-lints:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Rust
+        run: rustup override set stable && rustup update
+
+      - name: Install clippy
+        run: rustup component add clippy
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        
+      - name: Run cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+  test-os:
+    name: test ${{ matrix.os }}-${{ matrix.python-version }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macos, windows]
+        poetry-version: ["1.5.1"]
+        python-version: ["3.9", "3.10","3.11"]
+
+    runs-on: ${{ matrix.os }}-latest
+    needs: [rust-lints]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry==${{ matrix.poetry-version }}
+
+      - name: install rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: cache rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-v1
+
+      - name: set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'poetry'
+
+      - name: Create virtual environment
+        run: |
+          python -m venv .venv
+          echo "$GITHUB_WORKSPACE/rusty-logger/.venv/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run : make setup.project
+
+      - name: Lints
+        run : make lints.ci
+      
+      - name: Run tests and report coverage
+        run: make test.unit
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - run: cargo test
+        env:
+          RUST_BACKTRACE: 1
+
   build-sdist:
+    needs: [test-os]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -34,6 +104,7 @@ jobs:
           path: dist
 
   build-ubuntu:
+    needs: [test-os]
     name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }}
     strategy:
       fail-fast: false
@@ -72,6 +143,7 @@ jobs:
           path: dist
 
   build-ubuntu-musllinux:
+    needs: [test-os]
     name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }}
     strategy:
       fail-fast: false
@@ -112,6 +184,7 @@ jobs:
 
 
   build-macos:
+    needs: [test-os]
     name: build - macos - (${{ matrix.target }} - auto
     strategy:
       fail-fast: false
@@ -148,6 +221,7 @@ jobs:
           path: dist
 
   build-windows:
+    needs: [test-os]
     name: build - windows - (${{ matrix.target }} - auto
     strategy:
       fail-fast: false
