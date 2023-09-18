@@ -24,6 +24,7 @@ jobs:
         with:
           command: sdist
           args: --out dist
+          rust-toolchain: stable
 
       - name: Upload sdist
         uses: actions/upload-artifact@v3
@@ -31,124 +32,94 @@ jobs:
           name: wheels
           path: dist
 
-  macos-build:
-    runs-on: macos-latest
+  build:
+    name: build on ${{ matrix.platform || matrix.os }} (${{ matrix.target }} - ${{ matrix.manylinux || 'auto' }})
+    # only run on push to main and on release
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu, macos, windows]
         target: [x86_64, aarch64]
-        python-version: ["3.9", "3.10", "3.11"]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
-          sccache: 'true'
+        manylinux: [auto]
+        include:
+          - os: ubuntu
+            platform: linux
+          - os: windows
+            ls: dir
+            interpreter: 3.9 3.10 3.11
+          - os: windows
+            ls: dir
+            target: i686
+            python-architecture: x86
+            interpreter: 3.9 3.10 3.11
+          - os: windows
+            ls: dir
+            target: aarch64
+            interpreter: 3.11 3.12
+          - os: macos
+            target: aarch64
+            interpreter: 3.9 3.10 3.11
+          - os: ubuntu
+            platform: linux
+            target: i686
+          - os: ubuntu
+            platform: linux
+            target: aarch64
 
-      - name: "Test macos build"
-        run: |
-          pip install dist/${{ env.PACKAGE_NAME }}-*.whl --force-reinstall
-          cd ~ && python -c 'import rusty_logger'
+          - os: ubuntu
+            platform: linux
+            target: armv7
+            interpreter: 3.9 3.10 3.11
+          # musllinux
+          - os: ubuntu
+            platform: linux
+            target: x86_64
+            manylinux: musllinux_1_1
+          - os: ubuntu
+            platform: linux
+            target: aarch64
+            manylinux: musllinux_1_1
+          - os: ubuntu
+            platform: linux
+            target: ppc64le
+            interpreter: 3.9 3.10 3.11
+          - os: ubuntu
+            platform: linux
+            target: s390x
+            interpreter: 3.9 3.10 3.11
+        exclude:
+          - os: ubuntu
+            target: x86_64
+            manylinux: auto
+          - os: windows
+            target: x86_64
+          - os: windows
+            target: aarch64
+      runs-on: ${{ matrix.os }}-latest
+      steps:
+        - uses: actions/checkout@v4
 
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist
+        - name: set up python
+          uses: actions/setup-python@v4
+          with:
+            python-version: '3.11'
+            architecture: ${{ matrix.python-architecture || 'x64' }}
 
-  #macos-universal:
-  #  runs-on: macos-latest
-  #  strategy:
-  #    matrix:
-  #      python-version: ["3.9", "3.10","3.11"]
-  #  steps:
-  #    - uses: actions/checkout@v3
-  #    - uses: actions/setup-python@v4
-  #      with:
-  #        python-version: ${{ env.PYTHON_VERSION }}
-  #        architecture: x64
-#
-  #    - name: "Build wheels - universal2"
-  #      uses: PyO3/maturin-action@v1
-  #      with:
-  #        args: --release --target universal2-apple-darwin --out dist
-  #        sccache: 'true'
-#
-  #    - name: "Test wheel - universal2"
-  #      run: |
-  #        pip install dist/${{ env.PACKAGE_NAME }}-*universal2.whl --force-reinstall
-  #        cd ~ && python -c 'import rusty_logger'
-#
-  #    - name: "Upload wheels"
-  #      uses: actions/upload-artifact@v3
-  #      with:
-  #        name: wheels
-  #        path: dist
-#
-  #windows:
-  #  runs-on: windows-latest
-  #  strategy:
-  #    matrix:
-  #      python-version: ["3.9", "3.10", "3.11", "pypy3.9",  "pypy3.10"]
-  #      target: [x64, x86]
-#
-  #  steps:
-  #    - uses: actions/checkout@v3
-  #    - uses: actions/setup-python@v4
-  #      with:
-  #        python-version: ${{ matrix.python-version }}
-  #        architecture: ${{ matrix.target }}
-#
-  #    - name: Build wheels
-  #      uses: PyO3/maturin-action@v1
-  #      with:
-  #        target: ${{ matrix.target }}
-  #        args: --release --out dist --find-interpreter
-  #    - name: Install build wheel
-  #      shell: bash
-  #      run: |
-  #        pip install dist/${{ env.PACKAGE_NAME }}-*.whl--force-reinstall
-  #        cd ~ && python -c 'import rusty_logger'
-  #    - name: Upload wheels
-  #      uses: actions/upload-artifact@v3
-  #      with:
-  #        name: wheels
-  #        path: dist
-#
-  #linux:
-  #  runs-on: ubuntu-latest
-  #  strategy:
-  #    matrix:
-  #      python-version: ["3.9", "3.10", "3.11"]
-  #      target: [x86_64, i686, x86, aarch64, armv7, s390x, ppc64le]
-  #  steps:
-  #    - uses: actions/checkout@v3
-  #    - uses: actions/setup-python@v4
-  #      with:
-  #        python-version: ${{ matrix.python-version }}
-#
-  #    - name: Build Wheels
-  #      uses: PyO3/maturin-action@v1
-  #      with:
-  #        target: ${{ matrix.target }}
-  #        manylinux: auto
-  #        args: --release --out dist --find-interpreter
-#
-  #    - name: Install build wheel
-  #      if: matrix.target == 'x86_64'
-  #      run: |
-  #        pip install --force-reinstall dist/rusty_logger*.whl
-  #        cd ~ && python -c 'import rusty_logger'
-#
-  #    - name: Upload wheels
-  #      uses: actions/upload-artifact@v3
-  #      with:
-  #        name: wheels
-  #        path: dist
-#
-    
+        - name: build wheels
+          uses: PyO3/maturin-action@v1
+          with:
+            target: ${{ matrix.target }}
+            manylinux: ${{ matrix.manylinux || 'auto' }}
+            container: ${{ matrix.container }}
+            args: --release --out dist --interpreter ${{ matrix.interpreter || '3.9 3.10 3.11' }} ${{ matrix.extra-build-args }}
+            rust-toolchain: stable
+            docker-options: -e CI
 
+        - run: ${{ matrix.ls || 'ls -lh' }} dist/
+
+        - run: twine check --strict dist/*
+
+        - uses: actions/upload-artifact@v3
+          with:
+            name: pypi_files
+            path: dist
