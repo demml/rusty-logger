@@ -1,6 +1,6 @@
 
 <br>
-<img src="img/rusty-logger-logo.png"  width="767" height="159" alt="rusty logger logo"/>
+<img src="https://github.com/thorrester/rusty-logger/blob/main/img/rusty-logger-logo.png?raw=true"  width="767" height="159" alt="rusty logger logo"/>
 <br>
 
 [![Lints-Tests](https://github.com/thorrester/rusty-logger/actions/workflows/lint-testing.yml/badge.svg)](https://github.com/thorrester/rusty-logger/actions/workflows/lint-testing.yml)

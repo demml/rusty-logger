@@ -81,14 +81,17 @@ build-backend = "maturin"
 
 [project]
 name = "rusty-logger"
-requires-python = ">=3.9"
+description = 'Super fast logging for python'
+requires-python = ">=3.9, <3.12"
+authors = [
+    {name = 'Steven Forrester', email = 'sjforrester32@gmail.com'}
+]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
-    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
@@ -98,7 +101,23 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering",
+    'Intended Audience :: Developers',
+    'Intended Audience :: Information Technology',
+    "Intended Audience :: Science/Research",
+    'Operating System :: POSIX :: Linux',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: MacOS',
+    'Typing :: Typed',
 ]
+dynamic = [
+    'license',
+    'readme',
+]
+
+[project.urls]
+"Homepage" = "https://github.com/thorrester/rusty-logger"
+"Source Code" = "https://github.com/thorrester/rusty-logger"
+"Issues" = "https://github.com/thorrester/rusty-logger/issues"
 
 
 [tool.maturin]
