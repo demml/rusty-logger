@@ -105,6 +105,8 @@ jobs:
           python-version: '3.11'
           architecture: ${{ matrix.python-architecture || 'x64' }}
 
+      - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
+      
       - name: build wheels
         uses: PyO3/maturin-action@v1
         with:
