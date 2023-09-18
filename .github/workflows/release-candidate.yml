@@ -174,7 +174,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --interpreter ${{ matrix.interpreter }}
+          args: --release --out dist --interpreter ${{ matrix.interpreter || env.INTERPRETER }}
           rust-toolchain: stable
           docker-options: -e CI
 
