@@ -376,7 +376,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - run: |
           export VERSION=$(cargo pkgid | cut -d "#" -f2)
-          test "v$VERSION" "=" "$GITHUB_REF_NAME"
+          echo "version: $VERSION"
+          echo "tag: $GITHUB_REF_NAME"
+          test "$VERSION" "=" "$GITHUB_REF_NAME"
 
       - name: set up python
         uses: actions/setup-python@v4
