@@ -48,18 +48,18 @@ jobs:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
           sccache: 'true'
-#
-  #    - name: "Test sdist"
-  #      run: |
-  #        pip install dist/${{ env.PACKAGE_NAME }}-*.whl--force-reinstall
-  #        cd ~ && python -c 'import rusty_logger'
-#
-  #    - name: Upload wheels
-  #      uses: actions/upload-artifact@v3
-  #      with:
-  #        name: wheels
-  #        path: dist
-#
+
+      - name: "Test macos build"
+        run: |
+          pip install dist/${{ env.PACKAGE_NAME }}-*.whl--force-reinstall
+          cd ~ && python -c 'import rusty_logger'
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist
+
   #macos-universal:
   #  runs-on: macos-latest
   #  strategy:
