@@ -378,8 +378,9 @@ jobs:
       - name: install rust stable
         uses: dtolnay/rust-toolchain@stable
       - run: |
-          cargo pkgid | cut -d "#" -f2
           export VERSION=$(cargo pkgid | cut -d "#" -f2)
+          echo "version: $VERSION"
+          echo "tag: $GITHUB_REF_NAME"
           test "v$VERSION" "=" "$GITHUB_REF_NAME"
 
       - name: set up python
