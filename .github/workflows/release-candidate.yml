@@ -127,3 +127,118 @@ jobs:
         with:
           name: pypi_files
           path: dist
+
+  inspect-pypi-assets:
+    needs: [build, build-sdist]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: get dist artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: pypi_files
+          path: dist
+
+      - name: list dist files
+        run: |
+         ls -lh dist/
+         ls -l dist/
+         echo "`ls dist | wc -l` files"
+
+      - name: extract and list sdist file
+        run: |
+         mkdir sdist-files
+         tar -xvf dist/*.tar.gz -C sdist-files
+         tree -a sdist-files
+
+      - name: extract and list wheel file
+        run: |
+         ls dist/*cp310-manylinux*x86_64.whl | head -n 1
+         python -m zipfile --list `ls dist/*cp310-manylinux*x86_64.whl | head -n 1`
+
+  test-builds-arch:
+    name: test build on ${{ matrix.target }}-${{ matrix.distro }}
+    needs: [build]
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [aarch64, armv7, s390x, ppc64le]
+        distro: ['ubuntu22.04']
+        include:
+          - target: aarch64
+            distro: alpine_latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: get dist artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: pypi_files
+          path: dist
+
+      - uses: uraimo/run-on-arch-action@v2.5.1
+        name: install & test
+        with:
+          arch: ${{ matrix.target }}
+          distro: ${{ matrix.distro }}
+          githubToken: ${{ github.token }}
+          install: |
+            set -x
+            if command -v apt-get &> /dev/null; then
+              echo "installing python & pip with apt-get..."
+              apt-get update
+              apt-get install -y --no-install-recommends python3 python3-pip python3-venv
+            else
+              echo "installing python & pip with apk..."
+              apk update
+              apk add python3 py3-pip
+            fi
+          run: |
+            set -x
+            python3 -m venv venv
+            source venv/bin/activate
+            python3 -m pip install poetry==1.5.1
+            python3 -m poetry install --all-extras --with dev
+            python3 -m poetry add rusty_logger --no-index --no-deps --find-links dist --force-reinstall
+            python3 -m poetry run pytest
+            python3 -c 'import rusty_logger; print(rusty_logger.__version__)'
+
+  test-builds-os:
+    name: test build on ${{ matrix.os }}
+    needs: [build, build-pgo]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macos, windows]
+
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install poetry
+        run: pipx install poetry==${{ matrix.poetry-version }}
+
+      - name: set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Create virtual environment
+        run: |
+          python -m venv .venv
+          echo "$GITHUB_WORKSPACE/rusty-logger/.venv/bin" >> $GITHUB_PATH
+
+      - name: get dist artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: pypi_files
+          path: dist
+
+      - run: poetry install --all-extras --with dev
+      - run: poetry add rusty_logger --no-index --no-deps --find-links dist --force-reinstall
+      - run: poetry run pytest
