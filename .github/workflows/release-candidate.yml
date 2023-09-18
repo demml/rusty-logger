@@ -152,17 +152,14 @@ jobs:
       matrix:
         target: [x86_64, aarch64]
         include:
-          - os: windows
-            target: i686
+          - target: i686
             python-architecture: x86
             interpreter: 3.9 3.10 3.11 
-          - os: windows
-            target: aarch64
+          - target: aarch64
             interpreter: 3.11
         exclude:
           # Windows on arm64 only supports Python 3.11+
-          - os: windows
-            target: aarch64
+          - target: aarch64
 
     runs-on: windows-latest
     steps:
