@@ -152,7 +152,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64, x64, x86]
+        target: [x86_64]
         include:
           - target: i686
             python-architecture: x86
