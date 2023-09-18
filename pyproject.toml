@@ -2,6 +2,7 @@
 name = "rusty-logger"
 version = "0.0.0"
 description = "Rust-based python logger"
+readme = "README.md"
 authors = ["Thorrester <48217609+thorrester@users.noreply.github.com>"]
 
 [tool.poetry.dependencies]
