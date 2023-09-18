@@ -51,7 +51,7 @@ jobs:
 
       - name: "Test macos build"
         run: |
-          pip install dist/${{ env.PACKAGE_NAME }}-*.whl--force-reinstall
+          pip install dist/${{ env.PACKAGE_NAME }}-*.whl --force-reinstall
           cd ~ && python -c 'import rusty_logger'
 
       - name: Upload wheels
