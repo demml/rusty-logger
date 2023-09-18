@@ -152,16 +152,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64, aarch64]
+        target: [x86_64, x64, x86]
         include:
           - target: i686
             python-architecture: x86
             interpreter: 3.9 3.10 3.11 
-          - target: aarch64
-            interpreter: 3.11
-        exclude:
-          # Windows on arm64 only supports Python 3.11+
-          - target: aarch64
 
     runs-on: windows-latest
     steps:
