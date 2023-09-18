@@ -95,31 +95,31 @@ jobs:
             target: x86_64
           - os: windows
             target: aarch64
-      runs-on: ${{ matrix.os }}-latest
-      steps:
-        - uses: actions/checkout@v4
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - uses: actions/checkout@v4
 
-        - name: set up python
-          uses: actions/setup-python@v4
-          with:
-            python-version: '3.11'
-            architecture: ${{ matrix.python-architecture || 'x64' }}
+      - name: set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          architecture: ${{ matrix.python-architecture || 'x64' }}
 
-        - name: build wheels
-          uses: PyO3/maturin-action@v1
-          with:
-            target: ${{ matrix.target }}
-            manylinux: ${{ matrix.manylinux || 'auto' }}
-            container: ${{ matrix.container }}
-            args: --release --out dist --interpreter ${{ matrix.interpreter || '3.9 3.10 3.11' }} ${{ matrix.extra-build-args }}
-            rust-toolchain: stable
-            docker-options: -e CI
+      - name: build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux || 'auto' }}
+          container: ${{ matrix.container }}
+          args: --release --out dist --interpreter ${{ matrix.interpreter || '3.9 3.10 3.11' }} ${{ matrix.extra-build-args }}
+          rust-toolchain: stable
+          docker-options: -e CI
 
-        - run: ${{ matrix.ls || 'ls -lh' }} dist/
+      - run: ${{ matrix.ls || 'ls -lh' }} dist/
 
-        - run: twine check --strict dist/*
+      - run: twine check --strict dist/*
 
-        - uses: actions/upload-artifact@v3
-          with:
-            name: pypi_files
-            path: dist
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pypi_files
+          path: dist
