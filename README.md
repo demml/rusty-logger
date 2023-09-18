@@ -3,7 +3,7 @@
 <img src="https://github.com/thorrester/rusty-logger/blob/main/img/rusty-logger-logo.png?raw=true"  width="767" height="159" alt="rusty logger logo"/>
 <br>
 
-[![Lints-Tests](https://github.com/thorrester/rusty-logger/actions/workflows/lint-testing.yml/badge.svg)](https://github.com/thorrester/rusty-logger/actions/workflows/lint-testing.yml)
+[![Lints-Tests](https://github.com/thorrester/rusty-logger/actions/workflows/lint-testing.yml/badge.svg?branch=main)](https://github.com/thorrester/rusty-logger/actions/workflows/lint-testing.yml)
 [![codecov](https://codecov.io/gh/thorrester/rusty-logger/graph/badge.svg?token=RVDMQRUEHT)](https://codecov.io/gh/thorrester/rusty-logger)
 
 ## Rusty Logger
