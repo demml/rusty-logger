@@ -210,7 +210,7 @@ jobs:
 
   test-builds-os:
     name: test build on ${{ matrix.os }}
-    needs: [build, build-pgo]
+    needs: [build]
 
     strategy:
       fail-fast: false
