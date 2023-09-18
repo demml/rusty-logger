@@ -1,11 +1,11 @@
 name: Release Candidate
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches:
-      - release-candidate
+  #workflow_run:
+  #  workflows: [CI]
+  #  types: [completed]
+  #  branches:
+  #    - release-candidate
   push:
 
 permissions:
