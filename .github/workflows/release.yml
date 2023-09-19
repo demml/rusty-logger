@@ -14,7 +14,7 @@ env:
   RUSTFLAGS: -C debuginfo=0
 
 jobs:
-  rust-lints:
+  rust-lints-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +31,10 @@ jobs:
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
+      - run: cargo test
+        env:
+          RUST_BACKTRACE: 1
+
   test-os:
     name: test ${{ matrix.os }}-${{ matrix.python-version }}
 
@@ -42,7 +46,7 @@ jobs:
         python-version: ["3.8", "3.9", "3.10","3.11"]
 
     runs-on: ${{ matrix.os }}-latest
-    needs: [rust-lints]
+    needs: [rust-lints-test]
     steps:
       - uses: actions/checkout@v4
       - name: Install poetry
@@ -80,10 +84,6 @@ jobs:
         uses: codecov/codecov-action@v3
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - run: cargo test
-        env:
-          RUST_BACKTRACE: 1
 
   build-sdist:
     needs: [test-os]
@@ -235,7 +235,7 @@ jobs:
             python-architecture: x64
             interpreter: 3.8 3.9 3.10 3.11 pypy3.9 pypy3.10
           - target: x86
-            python-architecture: x64
+            python-architecture: x86
             interpreter: 3.8 3.9 3.10 3.11 pypy3.9 pypy3.10
         exclude:
           - target: x86
@@ -250,7 +250,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          architecture: ${{ matrix.python-architecture || 'x64' }}
+          architecture: ${{ matrix.python-architecture }}
 
       - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
 
