@@ -1,13 +1,14 @@
 from typing import Optional
-from rusty_logger import Logger, LogConfig, JsonConfig
+from rusty_logger import Logger, LogConfig, JsonConfig, LogFileConfig
 
 
 class JsonLogger(Logger):
     @classmethod
     def get_logger(cls, name: str, config: Optional[LogConfig] = None) -> Logger:
+        file_config = LogFileConfig(filename="log/test.log")
         config = LogConfig(
-            filename=f"log/test.log",
             json_config=JsonConfig(),
+            file_config=file_config,
         )
         return super().get_logger(name, config)
 

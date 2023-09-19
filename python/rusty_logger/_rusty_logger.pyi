@@ -41,16 +41,28 @@ class JsonConfig:
         """Whether to flatten any fields that are passed."""
         ...
 
+class LogFileConfig:
+    def __init__(self, filename: str = "log/logs.log", rotate: str = "never"):
+        """Creates logger file configuration for recording logs
+
+        Args:
+            filename:
+                The name of the file to write logs to.
+            rotate:
+                The rotation policy for the log file. Can be "never", "daily", "hourly", or "minutely".
+        """
+        ...
+
 class LogConfig:
     def __init__(
         self,
         stdout: bool = True,
         stderr: bool = False,
-        filename: Optional[str] = None,
         level: str = "INFO",
         app_env: Optional[str] = "development",
         time_format: Optional[str] = "[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]",
         json_config: Optional[JsonConfig] = None,
+        file_config: Optional[LogFileConfig] = None,
     ):
         """Creates logger configuration
 
@@ -70,6 +82,8 @@ class LogConfig:
                 The time format to use for logs.
             json_config:
                 Optional json logger configuration.
+            file_config:
+                Optional file logger configuration.
         """
         ...
     @property

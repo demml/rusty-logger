@@ -7,7 +7,7 @@ authors = ["Thorrester <48217609+thorrester@users.noreply.github.com>"]
 
 [tool.poetry.dependencies]
 # required dependencies
-python = ">=3.9,<3.12"
+python = ">=3.8,<3.12"
 
 
 [tool.poetry.group.dev]
@@ -82,7 +82,7 @@ build-backend = "maturin"
 [project]
 name = "rusty-logger"
 description = 'Super fast logging for python'
-requires-python = ">=3.9, <3.12"
+requires-python = ">=3.8, <3.12"
 authors = [
     {name = 'Steven Forrester', email = 'sjforrester32@gmail.com'}
 ]
