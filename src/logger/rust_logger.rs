@@ -572,13 +572,18 @@ impl RustLogger {
 
 #[cfg(test)]
 mod tests {
-    use super::{JsonConfig, LogConfig, LogMetadata, RustLogger};
+    use super::{JsonConfig, LogConfig, LogFileConfig, LogMetadata, RustLogger};
 
-    fn generate_test_json_config(level: String, stdout: bool, stderr: bool) -> LogConfig {
+    fn generate_test_file_config(
+        level: String,
+        stdout: bool,
+        stderr: bool,
+        rotate: &str,
+        filename: &str,
+    ) -> LogConfig {
         LogConfig {
             stdout,
             stderr,
-            filename: None,
             level,
             app_env: "development".to_string(),
             target: false,
@@ -586,6 +591,25 @@ mod tests {
                 "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
                     .to_string(),
             json_config: Some(JsonConfig::new(None)),
+            file_config: Some(LogFileConfig::new(
+                Some(filename.to_string()),
+                Some(rotate.to_string()),
+            )),
+        }
+    }
+
+    fn generate_test_json_config(level: String, stdout: bool, stderr: bool) -> LogConfig {
+        LogConfig {
+            stdout,
+            stderr,
+            level,
+            app_env: "development".to_string(),
+            target: false,
+            time_format:
+                "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
+                    .to_string(),
+            json_config: Some(JsonConfig::new(None)),
+            file_config: None,
         }
     }
 
@@ -593,7 +617,6 @@ mod tests {
         LogConfig {
             stdout: false,
             stderr: false,
-            filename: None,
             level: "INFO".to_string(),
             app_env: "development".to_string(),
             target: false,
@@ -601,6 +624,7 @@ mod tests {
                 "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
                     .to_string(),
             json_config: Some(JsonConfig::new(None)),
+            file_config: None,
         }
     }
 
@@ -635,6 +659,46 @@ mod tests {
             logger.error("test", Some(&metadata));
             logger.trace("test", Some(&metadata));
         });
+    }
+
+    #[test]
+    fn test_file_logger_minute() {
+        let config =
+            generate_test_file_config("INFO".to_string(), true, false, "minute", "minute/log.log");
+        let logger = RustLogger::new(&config, None);
+        logger.info("test", None);
+
+        std::fs::remove_dir_all("minute").unwrap();
+    }
+
+    #[test]
+    fn test_file_logger_hourly() {
+        let config =
+            generate_test_file_config("INFO".to_string(), true, false, "hourly", "hourly/log.log");
+        let logger = RustLogger::new(&config, None);
+        logger.info("test", None);
+
+        std::fs::remove_dir_all("hourly").unwrap();
+    }
+
+    #[test]
+    fn test_file_logger_daily() {
+        let config =
+            generate_test_file_config("INFO".to_string(), true, false, "daily", "daily/log.log");
+        let logger = RustLogger::new(&config, None);
+        logger.info("test", None);
+
+        std::fs::remove_dir_all("daily").unwrap();
+    }
+
+    #[test]
+    fn test_file_logger_never() {
+        let config =
+            generate_test_file_config("INFO".to_string(), true, false, "never", "never/log.log");
+        let logger = RustLogger::new(&config, None);
+        logger.info("test", None);
+
+        std::fs::remove_dir_all("never").unwrap();
     }
 
     #[test]
