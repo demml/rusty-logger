@@ -10,14 +10,14 @@ permissions:
 
 env:
   PACKAGE_NAME: rusty_logger
-  INTERPRETER: '3.9 3.10 3.11'
+  INTERPRETER: '3.8 3.9 3.10 3.11 pypy3.8 pypy3.9 pypy3.10'
   RUSTFLAGS: -C debuginfo=0
 
 jobs:
   rust-lints:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Rust
         run: rustup override set stable && rustup update
@@ -39,12 +39,12 @@ jobs:
       matrix:
         os: [ubuntu, macos, windows]
         poetry-version: ["1.5.1"]
-        python-version: ["3.9", "3.10","3.11"]
+        python-version: ["3.8", "3.9", "3.10","3.11"]
 
     runs-on: ${{ matrix.os }}-latest
     needs: [rust-lints]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry==${{ matrix.poetry-version }}
 
@@ -89,7 +89,7 @@ jobs:
     needs: [test-os]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build sdist
         uses: PyO3/maturin-action@v1
         with:
@@ -230,7 +230,7 @@ jobs:
         include:
           - target: i686
             python-architecture: x86
-            interpreter: 3.9 3.10 3.11 
+            interpreter: 3.9 3.10 3.11 pypy3.8 pypy3.9 pypy3.10
 
     runs-on: windows-latest
     steps:

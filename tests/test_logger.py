@@ -1,5 +1,5 @@
 import glob
-from rusty_logger import Logger, LogConfig, LogMetadata, JsonConfig, LogLevel, __version__
+from rusty_logger import Logger, LogConfig, LogMetadata, JsonConfig, LogLevel, LogFileConfig, __version__
 import shutil
 import json
 
@@ -12,7 +12,6 @@ def test_log_config():
     config = LogConfig()
     assert config.stdout is True
     assert config.stderr is False
-    assert config.filename is None
     assert config.level == "INFO"
     assert config.app_env == "development"
     assert config.target is False
@@ -37,12 +36,10 @@ def test_info_logger_stdout():
 
 
 def test_debug_logger_file():
+    file_config = LogFileConfig(filename="log/test.log")
     logger = Logger.get_logger(
         name=__file__,
-        config=LogConfig(
-            filename=f"log/test.log",
-            level="DEBUG",
-        ),
+        config=LogConfig(level="DEBUG", file_config=file_config),
     )
 
     logger.info("test info")
@@ -62,14 +59,13 @@ def test_debug_logger_file():
 
 
 def test_warn_logger_file():
+    file_config = LogFileConfig(filename="log/test.log")
     logger = Logger.get_logger(
         name=__file__,
         config=LogConfig(
-            filename=f"log/test.log",
             level="TRACE",
-            json_config=JsonConfig(
-                flatten=True,
-            ),
+            json_config=JsonConfig(flatten=True),
+            file_config=file_config,
         ),
     )
     logger.info("test info")
@@ -90,11 +86,12 @@ def test_warn_logger_file():
 
 
 def test_error_logger_file():
+    file_config = LogFileConfig(filename="log/test.log")
     logger = Logger.get_logger(
         name=__file__,
         config=LogConfig(
-            filename=f"log/test.log",
             level="ERROR",
+            file_config=file_config,
         ),
     )
     logger.info("test info")
@@ -131,12 +128,13 @@ def test_modules():
 
 
 def test_metadata():
+    file_config = LogFileConfig(filename="log/test.log")
     logger = Logger.get_logger(
         name=__file__,
         config=LogConfig(
-            filename=f"log/test.log",
             level="INFO",
             json_config=JsonConfig(),
+            file_config=file_config,
         ),
     )
 
@@ -148,7 +146,7 @@ def test_metadata():
 
         for json_str in json_list:
             result = json.loads(json_str)
-            result = json.loads(result["info"])
+            result = json.loads(result["metadata"])
 
         assert "test" in result
         shutil.rmtree("log", ignore_errors=False)
@@ -160,7 +158,6 @@ def test_invalid_config_format():
         config=LogConfig(
             stderr=False,
             stdout=False,
-            filename=None,
             time_format="[hour]:[minute]",
         ),
     )
