@@ -26,12 +26,14 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 | ------------- | :-------------:| :-------------: |
 | `stdout`  | Log to stdout  | `True` |
 | `stderr`  | Log to stderr  | `False` |
-| `filename`  | Log to file  | `None` |
 | `level`  | Level to log  | `INFO` |
 | `app_env`  | Application environment (APP_ENV env var)  | `development` |
 | `time_format` | Custom time format for logger | `[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]` |
 | `json_config`  | `JsonCofig`  | `None` |
 | `json_config.flatten`  | Whether to flatten any passed fields  | `True` |
+| `file_config`  | `LogFileConfig`  | `None` |
+| `file_config.filename`  | Filename for log  | `log/logs.log` |
+| `file_config.rotate`  | File rotation specification. `daily`, `hourly`, `minutely` or `never`  | `never` |
 
 ## Constraints
 
@@ -74,15 +76,15 @@ output
 ### Log to file
 
 ```python
-from rusty_logger import Logger, LogConfig, JsonConfig, LogLevel
+from rusty_logger import Logger, LogConfig, JsonConfig, LogLevel, LogFileConfig
 
 logger = Logger.get_logger(
     name=__file__,
     config=LogConfig(
         stdout=False,
         level=LogLevel.WARN,
-        filename="log/test.log",
         json_config=JsonConfig(),
+        file_config=LogFileConfig(filename="logs/test.log"),
     ),
 )
 logger.warning("arms are heavy")
@@ -111,15 +113,15 @@ output
 ### Record multiple places at once
 
 ```python
-from rusty_logger import Logger, LogConfig, JsonConfig, LogMetadata, LogLevel
+from rusty_logger import Logger, LogConfig, JsonConfig, LogMetadata, LogLevel, LogFileConfig
 
 logger = Logger.get_logger(
     __file__,
     LogConfig(
         stdout=True,
         level=LogLevel.ERROR,
-        filename="logs/test.log",
         json_config=JsonConfig(),
+        file_config=LogFileConfig(filename="logs/test.log")
     ),
 )
 logger.error("MOM'S SPAGHETTI!")
