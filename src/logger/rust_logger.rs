@@ -233,7 +233,7 @@ fn get_file_appender(
         tracing_appender::rolling::hourly(directory, file_name_prefix)
     } else if rotate == "daily" {
         tracing_appender::rolling::daily(directory, file_name_prefix)
-    } else if rotate == "minute" {
+    } else if rotate == "minutely" {
         tracing_appender::rolling::minutely(directory, file_name_prefix)
     } else {
         tracing_appender::rolling::never(directory, file_name_prefix)
@@ -661,8 +661,13 @@ mod tests {
 
     #[test]
     fn test_file_logger_minute() {
-        let config =
-            generate_test_file_config("INFO".to_string(), true, false, "minute", "minute/log.log");
+        let config = generate_test_file_config(
+            "INFO".to_string(),
+            true,
+            false,
+            "minutely",
+            "minute/log.log",
+        );
         let logger = RustLogger::new(&config, None);
         logger.info("test", None);
 
