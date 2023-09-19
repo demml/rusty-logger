@@ -34,12 +34,36 @@ pub struct JsonConfig {
 }
 
 #[pymethods]
-#[allow(clippy::too_many_arguments)]
 impl JsonConfig {
     #[new]
     pub fn new(flatten: Option<bool>) -> Self {
         JsonConfig {
             flatten: flatten.unwrap_or(true),
+        }
+    }
+
+    pub fn __str__(&self) -> PyResult<String> {
+        Ok(serde_json::to_string_pretty(&self).unwrap())
+    }
+}
+
+#[pyclass(dict)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LogFileConfig {
+    #[pyo3(get, set)]
+    pub filename: String,
+
+    #[pyo3(get, set)]
+    pub rotate: String,
+}
+
+#[pymethods]
+impl LogFileConfig {
+    #[new]
+    pub fn new(filename: Option<String>, rotate: Option<String>) -> Self {
+        LogFileConfig {
+            filename: filename.unwrap_or("log/logs.log".to_string()),
+            rotate: rotate.unwrap_or("never".to_string()),
         }
     }
 
@@ -58,9 +82,6 @@ pub struct LogConfig {
     pub stderr: bool,
 
     #[pyo3(get, set)]
-    pub filename: Option<String>,
-
-    #[pyo3(get, set)]
     pub level: String,
 
     #[pyo3(get, set)]
@@ -74,6 +95,9 @@ pub struct LogConfig {
 
     #[pyo3(get, set)]
     pub json_config: Option<JsonConfig>,
+
+    #[pyo3(get, set)]
+    pub file_config: Option<LogFileConfig>,
 }
 
 #[pymethods]
@@ -84,12 +108,12 @@ impl LogConfig {
     pub fn new(
         stdout: Option<bool>,
         stderr: Option<bool>,
-        filename: Option<String>,
         level: Option<String>,
         app_env: Option<String>,
         target: Option<bool>,
         time_format: Option<String>,
         json_config: Option<JsonConfig>,
+        file_config: Option<LogFileConfig>,
     ) -> Self {
         let log_env = match app_env {
             Some(val) => val,
@@ -101,9 +125,8 @@ impl LogConfig {
 
         let stdout = stdout.unwrap_or(false);
         let stderr = stderr.unwrap_or(false);
-        let filename_null = filename.is_some();
 
-        let stdout = if !stdout && !stderr && !filename_null {
+        let stdout = if !stdout && !stderr && file_config.is_none() {
             let msg = format!(
                 "{}: {}. {}",
                 "Invalid LogConfig".bold().red(),
@@ -120,12 +143,12 @@ impl LogConfig {
         LogConfig {
             stdout,
             stderr,
-            filename,
             level: level.unwrap_or_else(|| "INFO".to_string()),
             app_env: log_env,
             target: target.unwrap_or(false),
             time_format: time_format.unwrap_or_else(|| DEFAULT_TIME_PATTERN.to_string()),
             json_config,
+            file_config,
         }
     }
 
@@ -163,13 +186,8 @@ impl LogMetadata {
 ///
 /// * `name` - The name of the file
 ///
-fn get_file_name<T: Into<String>>(name: Option<T>) -> String {
-    let file_name = match name {
-        Some(val) => val.into(),
-        None => file!().to_string(),
-    };
-
-    Path::new(&file_name)
+fn get_file_name(filename: &str) -> String {
+    Path::new(&filename)
         .file_name()
         .and_then(|s| s.to_str())
         .unwrap()
@@ -188,12 +206,40 @@ fn get_log_directory(output: &str) -> String {
     }
 }
 
-fn get_file_params(log_config: &LogConfig) -> (String, String) {
-    let file = log_config.filename.as_ref().unwrap().to_string();
-    let directory = get_log_directory(&file);
-    let file_name_prefix = get_file_name(Some(&file));
+fn get_file_params(file_config: &LogFileConfig) -> (String, String) {
+    let directory = get_log_directory(&file_config.filename);
+    let file_name_prefix = get_file_name(&file_config.filename);
 
     (directory, file_name_prefix)
+}
+
+/// Get the file appender
+///
+/// # Arguments
+///
+/// * `rotate` - The rotation type
+/// * `directory` - The directory to write the file to
+/// * `file_name_prefix` - The prefix of the file name
+///
+/// # Returns
+///
+/// * `RollingFileAppender` - The file appender
+fn get_file_appender(
+    rotate: &str,
+    directory: &str,
+    file_name_prefix: &str,
+) -> tracing_appender::rolling::RollingFileAppender {
+    let appender = if rotate == "hourly" {
+        tracing_appender::rolling::hourly(directory, file_name_prefix)
+    } else if rotate == "daily" {
+        tracing_appender::rolling::daily(directory, file_name_prefix)
+    } else if rotate == "minute" {
+        tracing_appender::rolling::minutely(directory, file_name_prefix)
+    } else {
+        tracing_appender::rolling::never(directory, file_name_prefix)
+    };
+
+    appender
 }
 
 /// Rust logging class
@@ -260,14 +306,14 @@ impl RustLogger {
             .with(filter)
             .set_default();
 
-        let file_name = get_file_name(name);
+        let logger_filename = get_file_name(&name.unwrap_or("default".to_string()));
 
         Self {
             env: match env::var("APP_ENV") {
                 Ok(val) => val,
                 Err(_e) => "development".to_string(),
             },
-            name: file_name,
+            name: logger_filename,
             guard,
             config: log_config.clone(),
             reload_handle,
@@ -337,9 +383,14 @@ impl RustLogger {
             layers.push(RustLogger::construct_json_layer(log_config, io::stderr));
         }
 
-        if log_config.filename.is_some() {
-            let (directory, file_name_prefix) = get_file_params(log_config);
-            let file_appender = tracing_appender::rolling::hourly(directory, file_name_prefix);
+        if log_config.file_config.is_some() {
+            let (directory, file_name_prefix) =
+                get_file_params(&log_config.file_config.as_ref().unwrap());
+            let file_appender = get_file_appender(
+                &log_config.file_config.as_ref().unwrap().rotate,
+                &directory,
+                &file_name_prefix,
+            );
             layers.push(RustLogger::construct_json_layer(log_config, file_appender));
         }
 
@@ -392,9 +443,15 @@ impl RustLogger {
             layers.push(RustLogger::construct_cmd_layer(log_config, writer));
         }
 
-        if log_config.filename.is_some() {
-            let (directory, file_name_prefix) = get_file_params(log_config);
-            let writer = tracing_appender::rolling::hourly(directory, file_name_prefix);
+        if log_config.file_config.is_some() {
+            let (directory, file_name_prefix) =
+                get_file_params(&log_config.file_config.as_ref().unwrap());
+            let writer = get_file_appender(
+                &log_config.file_config.as_ref().unwrap().rotate,
+                &directory,
+                &file_name_prefix,
+            );
+
             layers.push(RustLogger::construct_cmd_layer(log_config, writer));
         }
 
@@ -434,7 +491,7 @@ impl RustLogger {
                 message = message,
                 app_env = self.env,
                 name = self.name,
-                info = ?val.data
+                metadata = ?val.data
             ),
             None => tracing::info!(message = message, app_env = self.env, name = self.name),
         };
@@ -452,7 +509,7 @@ impl RustLogger {
                 message = message,
                 app_env = self.env,
                 name = self.name,
-                info = ?val.data
+                metadata = ?val.data
             ),
             None => tracing::debug!(message = message, app_env = self.env, name = self.name),
         };
@@ -470,7 +527,7 @@ impl RustLogger {
                 message = message,
                 app_env = self.env,
                 name = self.name,
-                info = ?val.data
+                metadata = ?val.data
             ),
             None => tracing::warn!(message = message, app_env = self.env, name = self.name),
         };
@@ -488,7 +545,7 @@ impl RustLogger {
                 message = message,
                 app_env = self.env,
                 name = self.name,
-                info = ?val.data
+                metadata = ?val.data
             ),
             None => tracing::error!(message = message, app_env = self.env, name = self.name),
         };
@@ -506,7 +563,7 @@ impl RustLogger {
                 message = message,
                 app_env = self.env,
                 name = self.name,
-                info = ?val.data
+                metadata = ?val.data
             ),
             None => tracing::trace!(message = message, app_env = self.env, name = self.name),
         };
