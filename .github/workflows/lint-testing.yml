@@ -16,7 +16,7 @@ env:
   RUSTFLAGS: -C debuginfo=0  # Do not produce debug symbols to keep memory usage down
 
 jobs:
-  rust-lints:
+  rust-lints-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,6 +33,11 @@ jobs:
       - name: Run cargo clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
+      - run: cargo test
+        env:
+          RUST_BACKTRACE: 1
+
+
   test-os:
     name: test ${{ matrix.os }}-${{ matrix.python-version }}
 
@@ -44,7 +49,7 @@ jobs:
         python-version: ["3.8", "3.9", "3.10","3.11", "pypy3.8", "pypy3.9", "pypy3.10"]
 
     runs-on: ${{ matrix.os }}-latest
-    needs: [rust-lints]
+    needs: [rust-lints-test]
     steps:
       - uses: actions/checkout@v3
       - name: Install poetry
@@ -83,6 +88,4 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-      - run: cargo test
-        env:
-          RUST_BACKTRACE: 1
+    

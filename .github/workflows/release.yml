@@ -226,11 +226,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64]
+        target: [x64, x86]
         include:
           - target: i686
             python-architecture: x86
             interpreter: 3.8 3.9 3.10 3.11 pypy3.9 pypy3.10
+          - target: x64
+            python-architecture: x64
+            interpreter: 3.8 3.9 3.10 3.11 pypy3.9 pypy3.10
+          - target: x86
+            python-architecture: x64
+            interpreter: 3.8 3.9 3.10 3.11 pypy3.9 pypy3.10
+        exclude:
+          - target: x86
+          - target: x64
+
 
     runs-on: windows-latest
     steps:
