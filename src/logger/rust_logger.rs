@@ -229,7 +229,7 @@ fn get_file_appender(
     directory: &str,
     file_name_prefix: &str,
 ) -> tracing_appender::rolling::RollingFileAppender {
-    let appender = if rotate == "hourly" {
+    if rotate == "hourly" {
         tracing_appender::rolling::hourly(directory, file_name_prefix)
     } else if rotate == "daily" {
         tracing_appender::rolling::daily(directory, file_name_prefix)
@@ -237,9 +237,7 @@ fn get_file_appender(
         tracing_appender::rolling::minutely(directory, file_name_prefix)
     } else {
         tracing_appender::rolling::never(directory, file_name_prefix)
-    };
-
-    appender
+    }
 }
 
 /// Rust logging class
@@ -385,7 +383,7 @@ impl RustLogger {
 
         if log_config.file_config.is_some() {
             let (directory, file_name_prefix) =
-                get_file_params(&log_config.file_config.as_ref().unwrap());
+                get_file_params(log_config.file_config.as_ref().unwrap());
             let file_appender = get_file_appender(
                 &log_config.file_config.as_ref().unwrap().rotate,
                 &directory,
@@ -445,7 +443,7 @@ impl RustLogger {
 
         if log_config.file_config.is_some() {
             let (directory, file_name_prefix) =
-                get_file_params(&log_config.file_config.as_ref().unwrap());
+                get_file_params(log_config.file_config.as_ref().unwrap());
             let writer = get_file_appender(
                 &log_config.file_config.as_ref().unwrap().rotate,
                 &directory,
