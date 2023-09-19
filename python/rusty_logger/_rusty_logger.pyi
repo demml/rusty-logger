@@ -62,6 +62,7 @@ class LogConfig:
         app_env: Optional[str] = "development",
         time_format: Optional[str] = "[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]",
         json_config: Optional[JsonConfig] = None,
+        file_config: Optional[LogFileConfig] = None,
     ):
         """Creates logger configuration
 
@@ -81,6 +82,8 @@ class LogConfig:
                 The time format to use for logs.
             json_config:
                 Optional json logger configuration.
+            file_config:
+                Optional file logger configuration.
         """
         ...
     @property
