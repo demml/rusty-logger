@@ -61,12 +61,12 @@ body:
     attributes:
       label: Installed versions
       description: >
-        Paste the output of ``pl.show_versions()``
+        Paste the output of ``rusty_logger.__version__``
       value: |
         <details>
 
         ```
-        Replace this line with the output of rusty_logger.version().
+        Replace this line with the output of rusty_logger.__version__.
         ```
 
         </details>
