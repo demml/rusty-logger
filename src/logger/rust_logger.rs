@@ -502,12 +502,12 @@ impl RustLogger {
 
         match metadata {
             Some(val) => tracing::info!(
-                message = message,
+                message = msg,
                 app_env = self.env,
                 name = self.name,
                 metadata = ?val.data
             ),
-            None => tracing::info!(message = message, app_env = self.env, name = self.name),
+            None => tracing::info!(message = msg, app_env = self.env, name = self.name),
         };
     }
 
