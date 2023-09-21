@@ -241,6 +241,7 @@ fn get_file_appender(
     }
 }
 
+#[allow(clippy::len_zero)] // len tends to be faster than is_empty in tests
 fn format_string(message: &str, args: &[&str]) -> String {
     if args.len() > 0 {
         PythonFormat
@@ -654,11 +655,11 @@ mod tests {
         levels.iter().for_each(|level| {
             let config = generate_test_json_config(level.to_string(), true, false);
             let logger = RustLogger::new(&config, None);
-            logger.info("test", &vec!["10", "10"], None);
-            logger.debug("test", &vec!["10", "10"], None);
-            logger.warning("test", &vec!["10", "10"], None);
-            logger.error("test", &vec!["10", "10"], None);
-            logger.trace("test", &vec!["10", "10"], None);
+            logger.info("test", &["10", "10"], None);
+            logger.debug("test", &["10", "10"], None);
+            logger.warning("test", &["10", "10"], None);
+            logger.error("test", &["10", "10"], None);
+            logger.trace("test", &["10", "10"], None);
         });
     }
 
