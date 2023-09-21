@@ -78,27 +78,27 @@ impl PyJsonLogger {
 
     #[pyo3(signature = (message, *args, metadata=None))]
     pub fn info(&self, message: &str, args: Vec<&str>, metadata: Option<LogMetadata>) {
-        self.logger.info(message, Some(&args), metadata.as_ref());
+        self.logger.info(message, &args, metadata.as_ref());
     }
 
     #[pyo3(signature = (message, *args, metadata=None))]
     pub fn debug(&self, message: &str, args: Vec<&str>, metadata: Option<LogMetadata>) {
-        self.logger.debug(message, Some(&args), metadata.as_ref());
+        self.logger.debug(message, &args, metadata.as_ref());
     }
 
     #[pyo3(signature = (message, *args, metadata=None))]
     pub fn warning(&self, message: &str, args: Vec<&str>, metadata: Option<LogMetadata>) {
-        self.logger.warning(message, Some(&args), metadata.as_ref());
+        self.logger.warning(message, &args, metadata.as_ref());
     }
 
     #[pyo3(signature = (message, *args, metadata=None))]
     pub fn error(&self, message: &str, args: Vec<&str>, metadata: Option<LogMetadata>) {
-        self.logger.error(message, Some(&args), metadata.as_ref());
+        self.logger.error(message, &args, metadata.as_ref());
     }
 
     #[pyo3(signature = (message, *args, metadata=None))]
     pub fn trace(&self, message: &str, args: Vec<&str>, metadata: Option<LogMetadata>) {
-        self.logger.trace(message, Some(&args), metadata.as_ref());
+        self.logger.trace(message, &args, metadata.as_ref());
     }
 
     pub fn __str__(&self) -> PyResult<String> {

@@ -161,7 +161,7 @@ class Logger:
                 The level to log at.
         """
         ...
-    def info(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
+    def info(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
         """Logs a message at the INFO level.
 
         Args:
@@ -171,7 +171,7 @@ class Logger:
                 Optional metadata to associate with the log.
         """
         ...
-    def debug(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
+    def debug(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
         """Logs a message at the DEBUG level.
 
         Args:
@@ -181,7 +181,7 @@ class Logger:
                 Optional metadata to associate with the log.
         """
         ...
-    def warning(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
+    def warning(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
         """Logs a message at the WARNING level.
 
         Args:
@@ -191,7 +191,7 @@ class Logger:
                 Optional metadata to associate with the log.
         """
         ...
-    def error(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
+    def error(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
         """Logs a message at the ERROR level.
 
         Args:
@@ -201,7 +201,7 @@ class Logger:
                 Optional metadata to associate with the log.
         """
         ...
-    def trace(self, message: str, metadata: Optional[LogMetadata] = None) -> None:
+    def trace(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
         """Logs a message at the TRACE level.
 
         Args:

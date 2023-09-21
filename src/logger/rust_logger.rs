@@ -241,12 +241,11 @@ fn get_file_appender(
     }
 }
 
-fn format_string(message: &str, args: Option<&[&str]>) -> String {
-    if args.is_some() {
+fn format_string(message: &str, args: &[&str]) -> String {
+    if args.len() > 0 {
         PythonFormat
-            .format(message, args.unwrap())
+            .format(message, args)
             .unwrap_or_else(|_| message.into())
-            .as_ref()
             .to_string()
     } else {
         message.to_string()
@@ -496,19 +495,19 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn info(&self, message: &str, args: Option<&[&str]>, metadata: Option<&LogMetadata>) {
+    pub fn info(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
         // format string first
 
         let msg = format_string(message, args);
 
         match metadata {
             Some(val) => tracing::info!(
-                message = msg,
+                message = message,
                 app_env = self.env,
                 name = self.name,
                 metadata = ?val.data
             ),
-            None => tracing::info!(message = msg, app_env = self.env, name = self.name),
+            None => tracing::info!(message = message, app_env = self.env, name = self.name),
         };
     }
 
@@ -518,7 +517,7 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn debug(&self, message: &str, args: Option<&[&str]>, metadata: Option<&LogMetadata>) {
+    pub fn debug(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
         let msg = format_string(message, args);
 
         match metadata {
@@ -538,7 +537,7 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn warning(&self, message: &str, args: Option<&[&str]>, metadata: Option<&LogMetadata>) {
+    pub fn warning(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
         let msg = format_string(message, args);
         match metadata {
             Some(val) => tracing::warn!(
@@ -557,7 +556,7 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn error(&self, message: &str, args: Option<&[&str]>, metadata: Option<&LogMetadata>) {
+    pub fn error(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
         let msg = format_string(message, args);
         match metadata {
             Some(val) => tracing::error!(
@@ -576,7 +575,7 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn trace(&self, message: &str, args: Option<&[&str]>, metadata: Option<&LogMetadata>) {
+    pub fn trace(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
         let msg = format_string(message, args);
         match metadata {
             Some(val) => tracing::error!(
@@ -655,11 +654,11 @@ mod tests {
         levels.iter().for_each(|level| {
             let config = generate_test_json_config(level.to_string(), true, false);
             let logger = RustLogger::new(&config, None);
-            logger.info("test", Some(&vec!["10", "10"]), None);
-            logger.debug("test", Some(&vec!["10", "10"]), None);
-            logger.warning("test", Some(&vec!["10", "10"]), None);
-            logger.error("test", Some(&vec!["10", "10"]), None);
-            logger.trace("test", Some(&vec!["10", "10"]), None);
+            logger.info("test", &vec!["10", "10"], None);
+            logger.debug("test", &vec!["10", "10"], None);
+            logger.warning("test", &vec!["10", "10"], None);
+            logger.error("test", &vec!["10", "10"], None);
+            logger.trace("test", &vec!["10", "10"], None);
         });
     }
 
@@ -673,11 +672,11 @@ mod tests {
         levels.iter().for_each(|level| {
             let config = generate_test_json_config(level.to_string(), false, true);
             let logger = RustLogger::new(&config, None);
-            logger.info("test", None, Some(&metadata));
-            logger.debug("test", None, Some(&metadata));
-            logger.warning("test", None, Some(&metadata));
-            logger.error("test", None, Some(&metadata));
-            logger.trace("test", None, Some(&metadata));
+            logger.info("test", &[], Some(&metadata));
+            logger.debug("test", &[], Some(&metadata));
+            logger.warning("test", &[], Some(&metadata));
+            logger.error("test", &[], Some(&metadata));
+            logger.trace("test", &[], Some(&metadata));
         });
     }
 
@@ -691,7 +690,7 @@ mod tests {
             "minute/log.log",
         );
         let logger = RustLogger::new(&config, None);
-        logger.info("test", None, None);
+        logger.info("test", &[], None);
 
         std::fs::remove_dir_all("minute").unwrap();
     }
@@ -701,7 +700,7 @@ mod tests {
         let config =
             generate_test_file_config("INFO".to_string(), true, false, "hourly", "hourly/log.log");
         let logger = RustLogger::new(&config, None);
-        logger.info("test", None, None);
+        logger.info("test", &[], None);
 
         std::fs::remove_dir_all("hourly").unwrap();
     }
@@ -711,7 +710,7 @@ mod tests {
         let config =
             generate_test_file_config("INFO".to_string(), true, false, "daily", "daily/log.log");
         let logger = RustLogger::new(&config, None);
-        logger.info("test", None, None);
+        logger.info("test", &[], None);
 
         std::fs::remove_dir_all("daily").unwrap();
     }
@@ -721,7 +720,7 @@ mod tests {
         let config =
             generate_test_file_config("INFO".to_string(), true, false, "never", "never/log.log");
         let logger = RustLogger::new(&config, None);
-        logger.info("test", None, None);
+        logger.info("test", &[], None);
 
         std::fs::remove_dir_all("never").unwrap();
     }
@@ -734,6 +733,6 @@ mod tests {
 
         let config = generate_test_incorrect_config();
         let logger = RustLogger::new(&config, None);
-        logger.info("test", None, Some(&metadata));
+        logger.info("test", &[], Some(&metadata));
     }
 }
