@@ -54,7 +54,7 @@ impl PyJsonLogger {
     ) -> PyJsonLogger {
         let log_config = config.unwrap_or_else(|| {
             // get default
-            LogConfig::new(None, None, None, None, None, None, None, None)
+            LogConfig::new(None, None, None, None, None, None, None, None, None)
         });
 
         let logger = RustLogger::new(&log_config, name);

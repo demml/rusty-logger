@@ -59,6 +59,7 @@ class LogConfig:
         stdout: bool = True,
         stderr: bool = False,
         level: str = "INFO",
+        show_name: bool = True,
         app_env: Optional[str] = "development",
         time_format: Optional[str] = "[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]",
         json_config: Optional[JsonConfig] = None,
@@ -78,6 +79,8 @@ class LogConfig:
                 The level to log at.
             app_env:
                 The environment name to associate with logs. Defaults to "development"
+            show_name:
+                Whether to show the name given to the logger in the logs.
             time_format:
                 The time format to use for logs.
             json_config:
@@ -106,6 +109,10 @@ class LogConfig:
     @property
     def app_env(self) -> Optional[str]:
         """The environment name to associate with logs. Defaults to "development"""
+        ...
+    @property
+    def show_name(self) -> bool:
+        """Whether to show the name given to the logger in the logs."""
         ...
     @property
     def time_format(self) -> Optional[str]:
