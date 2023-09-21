@@ -164,3 +164,8 @@ def test_invalid_config_format():
 
     assert logger.config.stdout == True
     logger.info("blah")
+
+
+def test_info_logger_stdout_args():
+    logger = Logger.get_logger(name=__file__)
+    logger.info("test info %s, %d, %s", "arg1", "arg2", "100.12")
