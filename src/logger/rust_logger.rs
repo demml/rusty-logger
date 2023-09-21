@@ -92,6 +92,9 @@ pub struct LogConfig {
     pub target: bool,
 
     #[pyo3(get, set)]
+    pub show_name: bool,
+
+    #[pyo3(get, set)]
     pub time_format: String,
 
     #[pyo3(get, set)]
@@ -112,6 +115,7 @@ impl LogConfig {
         level: Option<String>,
         app_env: Option<String>,
         target: Option<bool>,
+        show_name: Option<bool>,
         time_format: Option<String>,
         json_config: Option<JsonConfig>,
         file_config: Option<LogFileConfig>,
@@ -146,6 +150,7 @@ impl LogConfig {
             stderr,
             level: level.unwrap_or_else(|| "INFO".to_string()),
             app_env: log_env,
+            show_name: show_name.unwrap_or(true),
             target: target.unwrap_or(false),
             time_format: time_format.unwrap_or_else(|| DEFAULT_TIME_PATTERN.to_string()),
             json_config,
@@ -500,15 +505,25 @@ impl RustLogger {
         // format string first
 
         let msg = format_string(message, args);
-
-        match metadata {
-            Some(val) => tracing::info!(
-                message = msg,
-                app_env = self.env,
-                name = self.name,
-                metadata = ?val.data
-            ),
-            None => tracing::info!(message = msg, app_env = self.env, name = self.name),
+        if self.config.show_name {
+            match metadata {
+                Some(val) => tracing::info!(
+                    message = msg,
+                    app_env = self.env,
+                    name = self.name,
+                    metadata = ?val.data
+                ),
+                None => tracing::info!(message = msg, app_env = self.env, name = self.name),
+            };
+        } else {
+            match metadata {
+                Some(val) => tracing::info!(
+                    message = msg,
+                    app_env = self.env,
+                    metadata = ?val.data
+                ),
+                None => tracing::info!(message = msg, app_env = self.env),
+            };
         };
     }
 
@@ -520,15 +535,25 @@ impl RustLogger {
     ///
     pub fn debug(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
         let msg = format_string(message, args);
-
-        match metadata {
-            Some(val) => tracing::debug!(
-                message = msg,
-                app_env = self.env,
-                name = self.name,
-                metadata = ?val.data
-            ),
-            None => tracing::debug!(message = msg, app_env = self.env, name = self.name),
+        if self.config.show_name {
+            match metadata {
+                Some(val) => tracing::debug!(
+                    message = msg,
+                    app_env = self.env,
+                    name = self.name,
+                    metadata = ?val.data
+                ),
+                None => tracing::debug!(message = msg, app_env = self.env, name = self.name),
+            };
+        } else {
+            match metadata {
+                Some(val) => tracing::debug!(
+                    message = msg,
+                    app_env = self.env,
+                    metadata = ?val.data
+                ),
+                None => tracing::debug!(message = msg, app_env = self.env),
+            };
         };
     }
 
@@ -540,14 +565,25 @@ impl RustLogger {
     ///
     pub fn warning(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
         let msg = format_string(message, args);
-        match metadata {
-            Some(val) => tracing::warn!(
-                message = msg,
-                app_env = self.env,
-                name = self.name,
-                metadata = ?val.data
-            ),
-            None => tracing::warn!(message = msg, app_env = self.env, name = self.name),
+        if self.config.show_name {
+            match metadata {
+                Some(val) => tracing::warn!(
+                    message = msg,
+                    app_env = self.env,
+                    name = self.name,
+                    metadata = ?val.data
+                ),
+                None => tracing::warn!(message = msg, app_env = self.env, name = self.name),
+            };
+        } else {
+            match metadata {
+                Some(val) => tracing::warn!(
+                    message = msg,
+                    app_env = self.env,
+                    metadata = ?val.data
+                ),
+                None => tracing::warn!(message = msg, app_env = self.env),
+            };
         };
     }
 
@@ -559,14 +595,25 @@ impl RustLogger {
     ///
     pub fn error(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
         let msg = format_string(message, args);
-        match metadata {
-            Some(val) => tracing::error!(
-                message = msg,
-                app_env = self.env,
-                name = self.name,
-                metadata = ?val.data
-            ),
-            None => tracing::error!(message = msg, app_env = self.env, name = self.name),
+        if self.config.show_name {
+            match metadata {
+                Some(val) => tracing::error!(
+                    message = msg,
+                    app_env = self.env,
+                    name = self.name,
+                    metadata = ?val.data
+                ),
+                None => tracing::error!(message = msg, app_env = self.env, name = self.name),
+            };
+        } else {
+            match metadata {
+                Some(val) => tracing::error!(
+                    message = msg,
+                    app_env = self.env,
+                    metadata = ?val.data
+                ),
+                None => tracing::error!(message = msg, app_env = self.env),
+            };
         };
     }
 
@@ -578,14 +625,25 @@ impl RustLogger {
     ///
     pub fn trace(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
         let msg = format_string(message, args);
-        match metadata {
-            Some(val) => tracing::error!(
-                message = msg,
-                app_env = self.env,
-                name = self.name,
-                metadata = ?val.data
-            ),
-            None => tracing::trace!(message = msg, app_env = self.env, name = self.name),
+        if self.config.show_name {
+            match metadata {
+                Some(val) => tracing::trace!(
+                    message = msg,
+                    app_env = self.env,
+                    name = self.name,
+                    metadata = ?val.data
+                ),
+                None => tracing::trace!(message = msg, app_env = self.env, name = self.name),
+            };
+        } else {
+            match metadata {
+                Some(val) => tracing::trace!(
+                    message = msg,
+                    app_env = self.env,
+                    metadata = ?val.data
+                ),
+                None => tracing::error!(message = msg, app_env = self.env),
+            };
         };
     }
 }
@@ -607,6 +665,7 @@ mod tests {
             level,
             app_env: "development".to_string(),
             target: false,
+            show_name: true,
             time_format:
                 "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
                     .to_string(),
@@ -625,6 +684,7 @@ mod tests {
             level,
             app_env: "development".to_string(),
             target: false,
+            show_name: false,
             time_format:
                 "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
                     .to_string(),
@@ -640,6 +700,7 @@ mod tests {
             level: "INFO".to_string(),
             app_env: "development".to_string(),
             target: false,
+            show_name: true,
             time_format:
                 "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
                     .to_string(),

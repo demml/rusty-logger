@@ -17,10 +17,7 @@ logging.basicConfig(
 
 logger = Logger.get_logger(
     name=__file__,
-    config=LogConfig(
-        level=LogLevel.INFO,
-        file_config=LogFileConfig(filename="logs/rust_log.log"),
-    ),
+    config=LogConfig(level=LogLevel.INFO, file_config=LogFileConfig(filename="logs/rust_log.log")),
 )
 
 

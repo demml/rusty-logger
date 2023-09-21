@@ -135,6 +135,7 @@ def test_metadata():
             level="INFO",
             json_config=JsonConfig(),
             file_config=file_config,
+            show_name=False,
         ),
     )
 
@@ -147,6 +148,7 @@ def test_metadata():
         for json_str in json_list:
             result = json.loads(json_str)
             result = json.loads(result["metadata"])
+            assert result.get("name") is None
 
         assert "test" in result
         shutil.rmtree("log", ignore_errors=False)
