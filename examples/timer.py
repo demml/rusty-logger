@@ -1,4 +1,4 @@
-from rusty_logger import Logger, LogLevel, LogConfig
+from rusty_logger import Logger, LogLevel, LogConfig, LogFileConfig
 import logging
 import timeit
 import shutil
@@ -9,25 +9,23 @@ pathlib.Path.mkdir(pathlib.Path("logs"), exist_ok=True)
 
 # setup py logger
 logging.basicConfig(
-    # filename="logs/py_log.log",
+    filename="logs/py_log.log",
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[logging.StreamHandler(sys.stdout)],
 )
 
 logger = Logger.get_logger(
     name=__file__,
     config=LogConfig(
-        stdout=True,
-        # level=LogLevel.DEBUG,
-        # filename="logs/rust_log.log",
+        level=LogLevel.INFO,
+        file_config=LogFileConfig(filename="logs/rust_log.log"),
     ),
 )
 
 
-rust_result = timeit.timeit(stmt='logger.info("test info")', globals=globals(), number=100)
-py_result = timeit.timeit(stmt='logging.info("test info")', globals=globals(), number=100)
+rust_result = timeit.timeit(stmt='logger.info("test info")', globals=globals(), number=1_000)
+py_result = timeit.timeit(stmt='logging.info("test info")', globals=globals(), number=1_000)
 
 print(f"Rust: {rust_result}")
 print(f"Python: {py_result}")
