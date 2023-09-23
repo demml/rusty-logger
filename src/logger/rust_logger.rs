@@ -102,6 +102,9 @@ pub struct LogConfig {
 
     #[pyo3(get, set)]
     pub file_config: Option<LogFileConfig>,
+
+    #[pyo3(get, set)]
+    pub lock_guard: bool,
 }
 
 #[pymethods]
@@ -119,6 +122,7 @@ impl LogConfig {
         time_format: Option<String>,
         json_config: Option<JsonConfig>,
         file_config: Option<LogFileConfig>,
+        lock_guard: Option<bool>,
     ) -> Self {
         let log_env = match app_env {
             Some(val) => val,
@@ -155,6 +159,7 @@ impl LogConfig {
             time_format: time_format.unwrap_or_else(|| DEFAULT_TIME_PATTERN.to_string()),
             json_config,
             file_config,
+            lock_guard: lock_guard.unwrap_or(false),
         }
     }
 
@@ -273,8 +278,8 @@ pub struct RustLogger {
     pub env: String,
     pub name: String,
     pub config: LogConfig,
-    guard: DefaultGuard,
     reload_handle: ReloadHandle,
+    guard: Option<DefaultGuard>,
 }
 
 impl RustLogger {
@@ -316,23 +321,48 @@ impl RustLogger {
         let layers = RustLogger::build_layers(log_config);
         let filter = RustLogger::get_level_filter(&log_config.level);
         let (filter, reload_handle) = reload::Layer::new(filter);
-
-        let guard = tracing_subscriber::registry()
-            .with(layers)
-            .with(filter)
-            .set_default();
-
         let logger_filename = get_file_name(&name.unwrap_or("default".to_string()));
 
-        Self {
-            env: match env::var("APP_ENV") {
+        // in case we want to lock the guard (default behavior is not to lock)
+        if log_config.lock_guard {
+            let guard = tracing_subscriber::registry()
+                .with(layers)
+                .with(filter)
+                .set_default();
+
+            Self {
+                env: match env::var("APP_ENV") {
+                    Ok(val) => val,
+                    Err(_e) => "development".to_string(),
+                },
+                name: logger_filename,
+                config: log_config.clone(),
+                reload_handle,
+                guard: Some(guard),
+            }
+
+        // Don't lock guard (set global default subscriber)
+        } else {
+            let subscriber_result = tracing_subscriber::registry()
+                .with(layers)
+                .with(filter)
+                .try_init();
+
+            match subscriber_result {
                 Ok(val) => val,
-                Err(_e) => "development".to_string(),
-            },
-            name: logger_filename,
-            guard,
-            config: log_config.clone(),
-            reload_handle,
+                Err(_e) => (),
+            }
+
+            Self {
+                env: match env::var("APP_ENV") {
+                    Ok(val) => val,
+                    Err(_e) => "development".to_string(),
+                },
+                name: logger_filename,
+                config: log_config.clone(),
+                reload_handle,
+                guard: None,
+            }
         }
     }
 
@@ -674,6 +704,7 @@ mod tests {
                 Some(filename.to_string()),
                 Some(rotate.to_string()),
             )),
+            lock_guard: true,
         }
     }
 
@@ -690,6 +721,7 @@ mod tests {
                     .to_string(),
             json_config: Some(JsonConfig::new(None)),
             file_config: None,
+            lock_guard: true,
         }
     }
 
@@ -706,6 +738,7 @@ mod tests {
                     .to_string(),
             json_config: Some(JsonConfig::new(None)),
             file_config: None,
+            lock_guard: true,
         }
     }
 
