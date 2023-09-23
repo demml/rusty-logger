@@ -42,13 +42,13 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 
 Time is currently limited to UTC; however, you can customize time format to your liking using the `time_format` arg. Please refer to (time docs)[https://time-rs.github.io/book/api/format-description.html] for formatting guidelines. In addition, because `Rusty-Logger` calls `Rust` directly, it's not currently possible to pull the specific line number where logging takes place unless python is directly used (if you're even interested in this feature :smile:). If you'd like to see this feature implemented, and you want to contribute, please refer to the [contributing](https://github.com/thorrester/rusty-logger/blob/main/CONTRIBUTING.md) guide.
 
-In addition, `Rusty-Logger` is a *mostly* drop-in replacement, meaning that in many workflows it'll work out of the box with no code change needed. However, in cases of `lazy` logging through additional `args``, `args` are expected to already be formatted as a `str` and will not be formatted by `Rusty-Logger` as the `rust` logic expects a `Vec<&str>` for args. For example, the following will not work:
+In addition, `Rusty-Logger` is a *mostly* drop-in replacement, meaning that in many workflows it'll work out of the box with no code change needed. However, in cases of `lazy` logging through additional `args`, `args` are expected to already be formatted as a `str` and will not be formatted by `Rusty-Logger` as the `rust` logic expects a `Vec<&str>` for args. For example, the following will not work:
 
 ```python
-# This will not work
+# This will fail
 logger.info("Number: %s", 10)
 
-# This will work
+# This will not fail
 logger.info("Number: %s", str(10))
 ```
 
