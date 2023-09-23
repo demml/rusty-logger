@@ -188,6 +188,7 @@ def test_invalid_config_format():
 
 
 def test_info_logger_stdout_args():
+    # turn of guard locking for last test
     logger = Logger.get_logger(name=__file__)
     logger.info(
         "test info %s, %d, %s",

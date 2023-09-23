@@ -1,5 +1,5 @@
-from examples.mod.foo import foo
-from examples.mod.bar import bar
+from foo import foo
+from bar import bar
 
 
 foo()
