@@ -17,6 +17,7 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 - [Constraints](#constraints)
 - [Additional metadata](#additional-metadata)
 - [Code examples](#show-me-the-code)
+- [Additional examples](#additional-examples)
 - [Performance](#performance)
 - [Contributing](#contributing)
 
@@ -28,8 +29,9 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 | `stderr`  | Log to stderr  | `False` |
 | `level`  | Level to log  | `INFO` |
 | `app_env`  | Application environment (APP_ENV env var)  | `development` |
+| `lock_guard`  | Whether to lock logger to current context  | `False` |
 | `time_format` | Custom time format for logger | `[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]` |
-| `json_config`  | `JsonCofig`  | `None` |
+| `json_config`  | `JsonConig`  | `None` |
 | `json_config.flatten`  | Whether to flatten any passed fields  | `True` |
 | `file_config`  | `LogFileConfig`  | `None` |
 | `file_config.filename`  | Filename for log  | `log/logs.log` |
@@ -131,6 +133,9 @@ output
 ```shell
 {"timestamp":"2023-09-15T20:32:23.417027Z","level":"ERROR","message":"MOM'S SPAGHETTI!","app_env":"development","name":"your_file.py"}
 ```
+## Additional examples
+
+For additional examples, please see the [examples](https://github.com/thorrester/rusty-logger/tree/main/examples) directory which contains timed example of vanilla logger vs `Rusty-Logger`, `python-json-logger` vs `Rusty-Logger` as well as a multi-worker API example.
 
 ## Performance
 Why would we do this when python logging is fine? Because we wanted something faster :smile:. From our own benchmarks, `Rusty-Logger` tends to be ~`4x` faster than vanilla python logging. And while speed may not be mission critical for a few thousands logs, it can be for millions, which many companies deal with on a daily basis. Time is money and compute, and we want to save you both :moneybag: :computer:.

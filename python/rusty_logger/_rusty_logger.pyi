@@ -60,8 +60,9 @@ class LogConfig:
         stderr: bool = False,
         level: str = "INFO",
         show_name: bool = True,
-        app_env: Optional[str] = "development",
-        time_format: Optional[str] = "[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]",
+        app_env: str = "development",
+        time_format: str = "[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]",
+        lock_guard: bool = False,
         json_config: Optional[JsonConfig] = None,
         file_config: Optional[LogFileConfig] = None,
     ):
@@ -87,6 +88,8 @@ class LogConfig:
                 Optional json logger configuration.
             file_config:
                 Optional file logger configuration.
+            lock_guard:
+                Boolean indicating whether to lock this logger to current context. Usually this will be false.
         """
         ...
     @property
@@ -121,6 +124,10 @@ class LogConfig:
     @property
     def json_config(self) -> Optional[JsonConfig]:
         """Optional json logger configuration"""
+        ...
+    @property
+    def lock_guard(self) -> bool:
+        """Boolean indicating whether to lock this logger to current context"""
         ...
 
 class LogMetadata:

@@ -3,6 +3,14 @@ from rusty_logger import Logger, LogConfig, LogMetadata, JsonConfig, LogLevel, L
 import shutil
 import json
 
+"""All tests are performed with guard locking
+Guard locking is a feature that allows you to lock a logger to a specific context that is dropped on end of context.
+All tests are performed with loggers scoped to their function context.
+If lock_guard is set to False, a default global logger is used that runs the duration of the application
+and is immutable after instantiation. Thus, subsequent tests with different logger configurations will fail.
+However, guard_lock = false (default) is useful for applications that do not require multiple loggers.
+"""
+
 
 def test_version():
     assert __version__ is not None
@@ -27,7 +35,10 @@ def test_log_level():
 
 
 def test_info_logger_stdout():
-    logger = Logger.get_logger(name=__file__)
+    logger = Logger.get_logger(
+        name=__file__,
+        config=LogConfig(lock_guard=True),
+    )
     logger.info("test info")
     logger.debug("test debug")
     logger.warning("test warning")
@@ -39,7 +50,11 @@ def test_debug_logger_file():
     file_config = LogFileConfig(filename="log/test.log")
     logger = Logger.get_logger(
         name=__file__,
-        config=LogConfig(level="DEBUG", file_config=file_config),
+        config=LogConfig(
+            level="DEBUG",
+            file_config=file_config,
+            lock_guard=True,
+        ),
     )
 
     logger.info("test info")
@@ -66,6 +81,7 @@ def test_warn_logger_file():
             level="TRACE",
             json_config=JsonConfig(flatten=True),
             file_config=file_config,
+            lock_guard=True,
         ),
     )
     logger.info("test info")
@@ -92,6 +108,7 @@ def test_error_logger_file():
         config=LogConfig(
             level="ERROR",
             file_config=file_config,
+            lock_guard=True,
         ),
     )
     logger.info("test info")
@@ -136,6 +153,7 @@ def test_metadata():
             json_config=JsonConfig(),
             file_config=file_config,
             show_name=False,
+            lock_guard=True,
         ),
     )
 
@@ -161,6 +179,7 @@ def test_invalid_config_format():
             stderr=False,
             stdout=False,
             time_format="[hour]:[minute]",
+            lock_guard=True,
         ),
     )
 
@@ -169,6 +188,7 @@ def test_invalid_config_format():
 
 
 def test_info_logger_stdout_args():
+    # turn of guard locking for last test
     logger = Logger.get_logger(name=__file__)
     logger.info(
         "test info %s, %d, %s",
