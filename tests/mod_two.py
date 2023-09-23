@@ -9,6 +9,7 @@ class JsonLogger(Logger):
         config = LogConfig(
             json_config=JsonConfig(),
             file_config=file_config,
+            lock_guard=True,
         )
         return super().get_logger(name, config)
 
