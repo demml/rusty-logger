@@ -7,7 +7,7 @@
 [![Lints-Tests](https://github.com/thorrester/rusty-logger/actions/workflows/lint-testing.yml/badge.svg?branch=main)](https://github.com/thorrester/rusty-logger/actions/workflows/lint-testing.yml)
 [![codecov](https://codecov.io/gh/thorrester/rusty-logger/graph/badge.svg?token=RVDMQRUEHT)](https://codecov.io/gh/thorrester/rusty-logger)
 
-### Rusty Logger
+## Rusty Logger
 
 Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin python wrapper for `Rust's` `tracing` library that provides a *mostly* drop-in replacement for `pythons` default logging.
 
