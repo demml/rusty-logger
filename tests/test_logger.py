@@ -3,6 +3,14 @@ from rusty_logger import Logger, LogConfig, LogMetadata, JsonConfig, LogLevel, L
 import shutil
 import json
 
+"""All tests are performed with guard locking
+Guard locking is a feature that allows you to lock a logger to a specific context that is dropped on end of context.
+All tests are performed with loggers scoped to their function context.
+If lock_guard is set to False, a default global logger is used that runs the duration of the application
+and is immutable after instantiation. Thus, subsequent tests with different logger configurations will fail.
+However, guard_lock = false (default) is useful for applications that do not require multiple loggers.
+"""
+
 
 def test_version():
     assert __version__ is not None
@@ -180,10 +188,7 @@ def test_invalid_config_format():
 
 
 def test_info_logger_stdout_args():
-    logger = Logger.get_logger(
-        name=__file__,
-        config=LogConfig(lock_guard=True),
-    )
+    logger = Logger.get_logger(name=__file__)
     logger.info(
         "test info %s, %d, %s",
         "arg1",
