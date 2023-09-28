@@ -11,16 +11,6 @@ use std::fmt;
 use tracing_subscriber::fmt::format;
 
 #[derive(FromPyObject, Debug)]
-enum DefaultTypes {
-    #[pyo3(transparent, annotation = "str")]
-    String(String),
-    #[pyo3(transparent, annotation = "int")]
-    Int(i64),
-    #[pyo3(transparent, annotation = "float")]
-    Float(f64),
-}
-
-#[derive(FromPyObject, Debug)]
 enum PyTypes<'a> {
     #[pyo3(transparent, annotation = "str")]
     String(String),
