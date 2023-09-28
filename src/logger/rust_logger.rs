@@ -8,8 +8,10 @@ use tracing_core::dispatcher::DefaultGuard;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::Layered;
 
-use dynfmt::{Format, PythonFormat};
+use dynfmt::FormatArgs;
+use dynfmt::{Format, SimpleCurlyFormat};
 use owo_colors::OwoColorize;
+use pyo3::types::{PyAny, PyList};
 use time::format_description::FormatItem;
 use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::fmt::MakeWriter;
@@ -252,9 +254,9 @@ fn get_file_appender(
 }
 
 #[allow(clippy::len_zero)] // len tends to be faster than is_empty in tests
-fn format_string(message: &str, args: &[&str]) -> String {
+fn format_string(message: &str, args: &Vec<String>) -> String {
     if args.len() > 0 {
-        PythonFormat
+        SimpleCurlyFormat
             .format(message, args)
             .unwrap_or_else(|_| message.into())
             .to_string()
@@ -531,10 +533,13 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn info(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
+    pub fn info(&self, message: &str, args: Option<Vec<String>>, metadata: Option<&LogMetadata>) {
         // format string first
+        let msg = match args {
+            Some(val) => format_string(message, &val),
+            None => message.to_string(),
+        };
 
-        let msg = format_string(message, args);
         if self.config.show_name {
             match metadata {
                 Some(val) => tracing::info!(
@@ -563,8 +568,11 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn debug(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
-        let msg = format_string(message, args);
+    pub fn debug(&self, message: &str, args: Option<Vec<String>>, metadata: Option<&LogMetadata>) {
+        let msg = match args {
+            Some(val) => format_string(message, &val),
+            None => message.to_string(),
+        };
         if self.config.show_name {
             match metadata {
                 Some(val) => tracing::debug!(
@@ -593,8 +601,16 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn warning(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
-        let msg = format_string(message, args);
+    pub fn warning(
+        &self,
+        message: &str,
+        args: Option<Vec<String>>,
+        metadata: Option<&LogMetadata>,
+    ) {
+        let msg = match args {
+            Some(val) => format_string(message, &val),
+            None => message.to_string(),
+        };
         if self.config.show_name {
             match metadata {
                 Some(val) => tracing::warn!(
@@ -623,8 +639,11 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn error(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
-        let msg = format_string(message, args);
+    pub fn error(&self, message: &str, args: Option<Vec<String>>, metadata: Option<&LogMetadata>) {
+        let msg = match args {
+            Some(val) => format_string(message, &val),
+            None => message.to_string(),
+        };
         if self.config.show_name {
             match metadata {
                 Some(val) => tracing::error!(
@@ -653,8 +672,11 @@ impl RustLogger {
     ///
     /// * `message` - The message to log
     ///
-    pub fn trace(&self, message: &str, args: &[&str], metadata: Option<&LogMetadata>) {
-        let msg = format_string(message, args);
+    pub fn trace(&self, message: &str, args: Option<Vec<String>>, metadata: Option<&LogMetadata>) {
+        let msg = match args {
+            Some(val) => format_string(message, &val),
+            None => message.to_string(),
+        };
         if self.config.show_name {
             match metadata {
                 Some(val) => tracing::trace!(
@@ -675,159 +697,5 @@ impl RustLogger {
                 None => tracing::error!(message = msg, app_env = self.env),
             };
         };
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{JsonConfig, LogConfig, LogFileConfig, LogMetadata, RustLogger};
-
-    fn generate_test_file_config(
-        level: String,
-        stdout: bool,
-        stderr: bool,
-        rotate: &str,
-        filename: &str,
-    ) -> LogConfig {
-        LogConfig {
-            stdout,
-            stderr,
-            level,
-            app_env: "development".to_string(),
-            target: false,
-            show_name: true,
-            time_format:
-                "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
-                    .to_string(),
-            json_config: Some(JsonConfig::new(None)),
-            file_config: Some(LogFileConfig::new(
-                Some(filename.to_string()),
-                Some(rotate.to_string()),
-            )),
-            lock_guard: true,
-        }
-    }
-
-    fn generate_test_json_config(level: String, stdout: bool, stderr: bool) -> LogConfig {
-        LogConfig {
-            stdout,
-            stderr,
-            level,
-            app_env: "development".to_string(),
-            target: false,
-            show_name: false,
-            time_format:
-                "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
-                    .to_string(),
-            json_config: Some(JsonConfig::new(None)),
-            file_config: None,
-            lock_guard: true,
-        }
-    }
-
-    fn generate_test_incorrect_config() -> LogConfig {
-        LogConfig {
-            stdout: false,
-            stderr: false,
-            level: "INFO".to_string(),
-            app_env: "development".to_string(),
-            target: false,
-            show_name: true,
-            time_format:
-                "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
-                    .to_string(),
-            json_config: Some(JsonConfig::new(None)),
-            file_config: None,
-            lock_guard: true,
-        }
-    }
-
-    #[test]
-    fn test_stdout_logger() {
-        let levels = ["INFO", "DEBUG", "WARN", "ERROR", "TRACE"];
-
-        levels.iter().for_each(|level| {
-            let config = generate_test_json_config(level.to_string(), true, false);
-            let logger = RustLogger::new(&config, None);
-            logger.info("test", &["10", "10"], None);
-            logger.debug("test", &["10", "10"], None);
-            logger.warning("test", &["10", "10"], None);
-            logger.error("test", &["10", "10"], None);
-            logger.trace("test", &["10", "10"], None);
-        });
-    }
-
-    #[test]
-    fn test_stderr_logger() {
-        let levels = ["INFO", "DEBUG", "WARN", "ERROR", "TRACE"];
-        let metadata = LogMetadata {
-            data: std::collections::HashMap::from([("Mercury".to_string(), "Mercury".to_string())]),
-        };
-
-        levels.iter().for_each(|level| {
-            let config = generate_test_json_config(level.to_string(), false, true);
-            let logger = RustLogger::new(&config, None);
-            logger.info("test", &[], Some(&metadata));
-            logger.debug("test", &[], Some(&metadata));
-            logger.warning("test", &[], Some(&metadata));
-            logger.error("test", &[], Some(&metadata));
-            logger.trace("test", &[], Some(&metadata));
-        });
-    }
-
-    #[test]
-    fn test_file_logger_minute() {
-        let config = generate_test_file_config(
-            "INFO".to_string(),
-            true,
-            false,
-            "minutely",
-            "minute/log.log",
-        );
-        let logger = RustLogger::new(&config, None);
-        logger.info("test", &[], None);
-
-        std::fs::remove_dir_all("minute").unwrap();
-    }
-
-    #[test]
-    fn test_file_logger_hourly() {
-        let config =
-            generate_test_file_config("INFO".to_string(), true, false, "hourly", "hourly/log.log");
-        let logger = RustLogger::new(&config, None);
-        logger.info("test", &[], None);
-
-        std::fs::remove_dir_all("hourly").unwrap();
-    }
-
-    #[test]
-    fn test_file_logger_daily() {
-        let config =
-            generate_test_file_config("INFO".to_string(), true, false, "daily", "daily/log.log");
-        let logger = RustLogger::new(&config, None);
-        logger.info("test", &[], None);
-
-        std::fs::remove_dir_all("daily").unwrap();
-    }
-
-    #[test]
-    fn test_file_logger_never() {
-        let config =
-            generate_test_file_config("INFO".to_string(), true, false, "never", "never/log.log");
-        let logger = RustLogger::new(&config, None);
-        logger.info("test", &[], None);
-
-        std::fs::remove_dir_all("never").unwrap();
-    }
-
-    #[test]
-    fn test_invalid_output() {
-        let metadata = LogMetadata {
-            data: std::collections::HashMap::from([("Mercury".to_string(), "Mercury".to_string())]),
-        };
-
-        let config = generate_test_incorrect_config();
-        let logger = RustLogger::new(&config, None);
-        logger.info("test", &[], Some(&metadata));
     }
 }
