@@ -1,28 +1,10 @@
-use std::env::Args;
-use std::hash::Hash;
-
 use crate::logger::rust_logger::{LogConfig, LogMetadata, RustLogger};
 use pyo3::prelude::*;
-use pyo3::types::PyString;
-use pyo3::types::{PyDict, PyList, PyTuple, PyType};
+use pyo3::types::{PyTuple, PyType};
 use serde_json::{json, to_string_pretty};
-use std::collections::HashMap;
-use std::fmt;
-use tracing_subscriber::fmt::format;
 
 #[derive(FromPyObject, Debug)]
 enum PyTypes<'a> {
-    #[pyo3(transparent, annotation = "str")]
-    String(String),
-    #[pyo3(transparent, annotation = "int")]
-    Int(i64),
-    #[pyo3(transparent, annotation = "float")]
-    Float(f64),
-    #[pyo3(transparent, annotation = "dict")]
-    PyDict(HashMap<String, &'a PyAny>),
-    #[pyo3(transparent, annotation = "list")]
-    PyList(Vec<&'a PyAny>),
-    #[pyo3(transparent)]
     CatchAll(&'a PyAny),
 }
 
@@ -58,35 +40,10 @@ impl LogLevel {
     }
 }
 
-#[pyclass(name = "Logger", subclass)]
-pub struct PyJsonLogger {
-    logger: RustLogger,
-
-    #[pyo3(get, set)]
-    pub config: LogConfig,
-}
-
 pub fn parse_args(args: &PyTuple) -> Vec<String> {
     let args = args
         .iter()
         .map(|x| match x.extract::<PyTypes>() {
-            Ok(PyTypes::String(s)) => s,
-            Ok(PyTypes::Int(i)) => i.to_string(),
-            Ok(PyTypes::Float(f)) => f.to_string(),
-            Ok(PyTypes::PyDict(d)) => {
-                let mut dict = HashMap::new();
-                for (k, v) in d {
-                    dict.insert(k.clone(), v.to_string());
-                }
-                to_string_pretty(&dict).unwrap()
-            }
-            Ok(PyTypes::PyList(l)) => {
-                let mut list = Vec::new();
-                for v in l {
-                    list.push(v.to_string());
-                }
-                to_string_pretty(&list).unwrap()
-            }
             Ok(PyTypes::CatchAll(c)) => c.to_string(),
             Err(e) => {
                 println!("Error: {}", e);
@@ -98,26 +55,29 @@ pub fn parse_args(args: &PyTuple) -> Vec<String> {
     args
 }
 
+#[pyclass(name = "Logger", subclass)]
+pub struct PyLogger {
+    logger: RustLogger,
+
+    #[pyo3(get, set)]
+    pub config: LogConfig,
+}
+
 #[pymethods]
 #[allow(unused_variables)]
-impl PyJsonLogger {
-    #[classmethod]
-    pub fn get_logger(
-        cls: &PyType,
-        name: Option<String>,
-        config: Option<LogConfig>,
-    ) -> PyJsonLogger {
+impl PyLogger {
+    #[new]
+    pub fn new(config: Option<LogConfig>) -> PyResult<Self> {
         let log_config = config.unwrap_or_else(|| {
             // get default
             LogConfig::new(None, None, None, None, None, None, None, None, None, None)
         });
 
-        let logger = RustLogger::new(&log_config, name);
-
-        PyJsonLogger {
+        let logger = RustLogger::new(&log_config);
+        Ok(PyLogger {
             logger,
             config: log_config,
-        }
+        })
     }
 
     /// Set the log level for the logger
@@ -131,7 +91,19 @@ impl PyJsonLogger {
         self.logger.reload_level(&config.level).unwrap()
     }
 
-    #[pyo3(signature = (message, *args, metadata=None))]
+    pub fn update_name(&mut self, name: String) {
+        let mut config = self.config.clone();
+        config.update_name(name);
+        self.config = config;
+    }
+
+    pub fn drop_guard(&mut self) {
+        if self.logger.guard.is_some() {
+            self.logger.guard.take();
+        }
+    }
+
+    #[pyo3(signature = (message, *args, metadata=None,))]
     pub fn info(&self, message: &str, args: &PyTuple, metadata: Option<LogMetadata>) {
         let args = if args.is_empty() {
             None
@@ -141,7 +113,8 @@ impl PyJsonLogger {
             Some(parse_args(args))
         };
 
-        self.logger.info(message, args, metadata.as_ref());
+        self.logger
+            .info(message, args, metadata.as_ref(), &self.config);
     }
 
     #[pyo3(signature = (message, *args, metadata=None))]
@@ -153,7 +126,8 @@ impl PyJsonLogger {
         } else {
             Some(parse_args(args))
         };
-        self.logger.debug(message, args, metadata.as_ref());
+        self.logger
+            .debug(message, args, metadata.as_ref(), &self.config);
     }
 
     #[pyo3(signature = (message, *args, metadata=None))]
@@ -165,7 +139,8 @@ impl PyJsonLogger {
         } else {
             Some(parse_args(args))
         };
-        self.logger.warning(message, args, metadata.as_ref());
+        self.logger
+            .warning(message, args, metadata.as_ref(), &self.config);
     }
 
     #[pyo3(signature = (message, *args, metadata=None))]
@@ -177,7 +152,8 @@ impl PyJsonLogger {
         } else {
             Some(parse_args(args))
         };
-        self.logger.error(message, args, metadata.as_ref());
+        self.logger
+            .error(message, args, metadata.as_ref(), &self.config);
     }
 
     #[pyo3(signature = (message, *args, metadata=None))]
@@ -189,15 +165,16 @@ impl PyJsonLogger {
         } else {
             Some(parse_args(args))
         };
-        self.logger.trace(message, args, metadata.as_ref());
+        self.logger
+            .trace(message, args, metadata.as_ref(), &self.config);
     }
 
     pub fn __str__(&self) -> PyResult<String> {
         let json = json!({
             "type": "Logger",
-            "name": self.logger.name,
-            "level": self.logger.env,
-            "config": self.logger.config,
+            "name": self.config.name,
+            "level": self.config.app_env,
+            "config": self.config,
         });
 
         Ok(to_string_pretty(&json).unwrap())
