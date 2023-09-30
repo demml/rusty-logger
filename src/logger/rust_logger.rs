@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::env;
 use std::io;
 use std::path::Path;
@@ -132,10 +131,7 @@ impl LogConfig {
             },
         };
 
-        let name = match name {
-            Some(val) => Some(get_file_name(&val)),
-            None => None,
-        };
+        let name = name.map(|val| get_file_name(&val));
 
         let stdout = stdout.unwrap_or(false);
         let stderr = stderr.unwrap_or(false);

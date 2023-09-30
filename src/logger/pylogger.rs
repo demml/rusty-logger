@@ -1,4 +1,4 @@
-use crate::logger::rust_logger::{JsonConfig, LogConfig, LogFileConfig, RustLogger};
+use crate::logger::rust_logger::{JsonConfig, LogConfig, RustLogger};
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
 use serde_json::{json, to_string_pretty};
@@ -152,8 +152,6 @@ impl PyLogger {
     pub fn info(&self, message: &str, args: &PyTuple) {
         let args = if args.is_empty() {
             None
-        } else if args.is_none() {
-            None
         } else {
             Some(parse_args(args))
         };
@@ -171,8 +169,6 @@ impl PyLogger {
     pub fn debug(&self, message: &str, args: &PyTuple) {
         let args = if args.is_empty() {
             None
-        } else if args.is_none() {
-            None
         } else {
             Some(parse_args(args))
         };
@@ -188,8 +184,6 @@ impl PyLogger {
     #[pyo3(signature = (message, *args))]
     pub fn warning(&self, message: &str, args: &PyTuple) {
         let args = if args.is_empty() {
-            None
-        } else if args.is_none() {
             None
         } else {
             Some(parse_args(args))
@@ -208,8 +202,6 @@ impl PyLogger {
     pub fn error(&self, message: &str, args: &PyTuple) {
         let args = if args.is_empty() {
             None
-        } else if args.is_none() {
-            None
         } else {
             Some(parse_args(args))
         };
@@ -226,8 +218,6 @@ impl PyLogger {
     #[pyo3(signature = (message, *args))]
     pub fn trace(&self, message: &str, args: &PyTuple) {
         let args = if args.is_empty() {
-            None
-        } else if args.is_none() {
             None
         } else {
             Some(parse_args(args))
@@ -250,7 +240,8 @@ impl PyLogger {
 
 #[cfg(test)]
 mod tests {
-    use super::{LogConfig, LogFileConfig, PyLogger};
+    use super::{LogConfig, PyLogger};
+    use crate::logger::rust_logger::LogFileConfig;
     use pyo3::prelude::*;
     use pyo3::types::PyTuple;
     use std::fs::File;
