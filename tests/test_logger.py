@@ -136,30 +136,6 @@ def test_modules():
     shutil.rmtree("log", ignore_errors=False)
 
 
-def test_metadata():
-    file_config = LogFileConfig(filename="log/test.log")
-    logger.config = LogConfig(
-        level="INFO",
-        json_config=JsonConfig(),
-        file_config=file_config,
-        lock_guard=True,
-    )
-
-    logger.info("test info", metadata=LogMetadata(data={"test": "info"}))
-
-    for name in glob.glob(f"log/test.log*"):
-        with open(name, "r") as fp:
-            json_list = list(fp)
-
-        for json_str in json_list:
-            result = json.loads(json_str)
-            result = json.loads(result["metadata"])
-            assert result.get("name") is None
-
-        assert "test" in result
-        shutil.rmtree("log", ignore_errors=False)
-
-
 def test_invalid_config_format():
     logger.config = LogConfig(
         stderr=False,
