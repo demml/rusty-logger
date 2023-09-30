@@ -1,6 +1,6 @@
-use crate::logger::rust_logger::{LogConfig, LogMetadata, RustLogger};
+use crate::logger::rust_logger::{LogConfig, RustLogger};
 use pyo3::prelude::*;
-use pyo3::types::{PyTuple, PyType};
+use pyo3::types::PyTuple;
 use serde_json::{json, to_string_pretty};
 
 #[derive(FromPyObject, Debug)]
@@ -66,6 +66,13 @@ pub struct PyLogger {
 #[pymethods]
 #[allow(unused_variables)]
 impl PyLogger {
+    /// Create a new logger
+    ///
+    /// # Arguments
+    /// * `config` - The log config to use
+    ///
+    /// # Returns
+    /// A new logger
     #[new]
     pub fn new(config: Option<LogConfig>) -> PyResult<Self> {
         let log_config = config.unwrap_or_else(|| {
@@ -91,20 +98,28 @@ impl PyLogger {
         self.logger.reload_level(&config.level).unwrap()
     }
 
+    /// Update the name used for the logger
     pub fn update_name(&mut self, name: String) {
         let mut config = self.config.clone();
         config.update_name(name);
         self.config = config;
     }
 
+    /// Drop the guard for the logger
     pub fn drop_guard(&mut self) {
         if self.logger.guard.is_some() {
             self.logger.guard.take();
         }
     }
 
-    #[pyo3(signature = (message, *args, metadata=None,))]
-    pub fn info(&self, message: &str, args: &PyTuple, metadata: Option<LogMetadata>) {
+    /// Log at INFO level
+    ///
+    /// # Arguments
+    /// * `message` - The message to log
+    /// * `args` - The arguments to log
+    ///
+    #[pyo3(signature = (message, *args))]
+    pub fn info(&self, message: &str, args: &PyTuple) {
         let args = if args.is_empty() {
             None
         } else if args.is_none() {
@@ -113,12 +128,17 @@ impl PyLogger {
             Some(parse_args(args))
         };
 
-        self.logger
-            .info(message, args, metadata.as_ref(), &self.config);
+        self.logger.info(message, args, &self.config);
     }
 
-    #[pyo3(signature = (message, *args, metadata=None))]
-    pub fn debug(&self, message: &str, args: &PyTuple, metadata: Option<LogMetadata>) {
+    /// Log at DEBUG level
+    ///
+    /// # Arguments
+    /// * `message` - The message to log
+    /// * `args` - The arguments to log
+    ///
+    #[pyo3(signature = (message, *args))]
+    pub fn debug(&self, message: &str, args: &PyTuple) {
         let args = if args.is_empty() {
             None
         } else if args.is_none() {
@@ -126,12 +146,17 @@ impl PyLogger {
         } else {
             Some(parse_args(args))
         };
-        self.logger
-            .debug(message, args, metadata.as_ref(), &self.config);
+        self.logger.debug(message, args, &self.config);
     }
 
-    #[pyo3(signature = (message, *args, metadata=None))]
-    pub fn warning(&self, message: &str, args: &PyTuple, metadata: Option<LogMetadata>) {
+    /// Log at WARN level
+    ///
+    /// # Arguments
+    /// * `message` - The message to log
+    /// * `args` - The arguments to log
+    ///
+    #[pyo3(signature = (message, *args))]
+    pub fn warning(&self, message: &str, args: &PyTuple) {
         let args = if args.is_empty() {
             None
         } else if args.is_none() {
@@ -139,12 +164,18 @@ impl PyLogger {
         } else {
             Some(parse_args(args))
         };
-        self.logger
-            .warning(message, args, metadata.as_ref(), &self.config);
+        self.logger.warning(message, args, &self.config);
     }
 
-    #[pyo3(signature = (message, *args, metadata=None))]
-    pub fn error(&self, message: &str, args: &PyTuple, metadata: Option<LogMetadata>) {
+    /// Log at ERROR level
+    ///
+    /// # Arguments
+    /// * `message` - The message to log
+    /// * `args` - The arguments to log
+    /// * `metadata` - The metadata to log
+    ///
+    #[pyo3(signature = (message, *args))]
+    pub fn error(&self, message: &str, args: &PyTuple) {
         let args = if args.is_empty() {
             None
         } else if args.is_none() {
@@ -152,12 +183,18 @@ impl PyLogger {
         } else {
             Some(parse_args(args))
         };
-        self.logger
-            .error(message, args, metadata.as_ref(), &self.config);
+        self.logger.error(message, args, &self.config);
     }
 
-    #[pyo3(signature = (message, *args, metadata=None))]
-    pub fn trace(&self, message: &str, args: &PyTuple, metadata: Option<LogMetadata>) {
+    /// Log at TRACE level
+    ///
+    /// # Arguments
+    /// * `message` - The message to log
+    /// * `args` - The arguments to log
+    /// * `metadata` - The metadata to log
+    ///
+    #[pyo3(signature = (message, *args))]
+    pub fn trace(&self, message: &str, args: &PyTuple) {
         let args = if args.is_empty() {
             None
         } else if args.is_none() {
@@ -165,10 +202,10 @@ impl PyLogger {
         } else {
             Some(parse_args(args))
         };
-        self.logger
-            .trace(message, args, metadata.as_ref(), &self.config);
+        self.logger.trace(message, args, &self.config);
     }
 
+    /// String magic method for PyLogger class
     pub fn __str__(&self) -> PyResult<String> {
         let json = json!({
             "type": "Logger",

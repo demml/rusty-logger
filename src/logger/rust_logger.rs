@@ -8,10 +8,8 @@ use tracing_core::dispatcher::DefaultGuard;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::Layered;
 
-use dynfmt::FormatArgs;
 use dynfmt::{Format, SimpleCurlyFormat};
 use owo_colors::OwoColorize;
-use pyo3::types::{PyAny, PyList};
 use time::format_description::FormatItem;
 use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::fmt::MakeWriter;
@@ -184,25 +182,6 @@ impl LogConfig {
     }
 }
 
-#[pyclass]
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct LogMetadata {
-    #[pyo3(get, set)]
-    pub data: HashMap<String, String>,
-}
-
-#[pymethods]
-impl LogMetadata {
-    #[new]
-    pub fn new(data: HashMap<String, String>) -> LogMetadata {
-        LogMetadata { data }
-    }
-
-    pub fn __str__(&self) -> PyResult<String> {
-        Ok(serde_json::to_string_pretty(&self).unwrap())
-    }
-}
-
 /// Get the name of the file
 ///
 /// # Arguments
@@ -283,9 +262,6 @@ fn format_string(message: &str, args: &Vec<String>) -> String {
 /// * `level` - The level of the logger. Either "info", "debug", "warn", or "error"
 /// * `name` - The name of the file
 ///
-///
-
-#[allow(dead_code)]
 pub struct RustLogger {
     reload_handle: ReloadHandle,
     pub guard: Option<DefaultGuard>,
@@ -318,14 +294,15 @@ impl RustLogger {
             _ => LevelFilter::INFO,
         }
     }
+
     /// Create a new logger
     ///
     /// # Arguments
     ///
-    /// * `output` - The output of the logger. Either "stdout" or "stderr"
-    /// * `level` - The level of the logger. Either "info", "debug", "warn", or "error"
-    /// * `name` - The name of the file
+    /// * `log_config` - The configuration for the logger
     ///
+    /// # Returns
+    /// RustLogger
     pub fn new(log_config: &LogConfig) -> RustLogger {
         let layers = RustLogger::build_layers(log_config);
         let filter = RustLogger::get_level_filter(&log_config.level);
@@ -362,6 +339,7 @@ impl RustLogger {
         }
     }
 
+    /// Reload the logger level
     pub fn reload_level(&mut self, level: &str) -> Result<(), reload::Error> {
         let filter = RustLogger::get_level_filter(level);
         self.reload_handle.reload(filter)
@@ -373,10 +351,8 @@ impl RustLogger {
     ///
     /// * `log_config` - The configuration for the logger
     /// * `writer` - The writer for the logger
-    /// * `timer` - The timer for the logger
     ///
     /// # Returns
-    ///
     /// * `Box<dyn Layer<S> + Send + Sync>` - The layer for the logger
     fn construct_json_layer<W2, S>(
         log_config: &LogConfig,
@@ -408,7 +384,6 @@ impl RustLogger {
     /// * `log_config` - The configuration for the logger
     ///
     /// # Returns
-    ///
     /// * `Vec<Box<dyn Layer<S> + Send + Sync>>` - The layers for the logger
     fn construct_json_layers<S>(log_config: &LogConfig) -> Vec<Box<dyn Layer<S> + Send + Sync>>
     where
@@ -526,14 +501,10 @@ impl RustLogger {
     /// # Arguments
     ///
     /// * `message` - The message to log
+    /// * `args` - The arguments to log
+    /// * `log_config` - The configuration for the logger
     ///
-    pub fn info(
-        &self,
-        message: &str,
-        args: Option<Vec<String>>,
-        metadata: Option<&LogMetadata>,
-        log_config: &LogConfig,
-    ) {
+    pub fn info(&self, message: &str, args: Option<Vec<String>>, log_config: &LogConfig) {
         // format string first
         let msg = match args {
             Some(val) => format_string(message, &val),
@@ -541,28 +512,13 @@ impl RustLogger {
         };
 
         if log_config.name.is_some() {
-            match metadata {
-                Some(val) => tracing::info!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    name = log_config.name,
-                    metadata = ?val.data
-                ),
-                None => tracing::info!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    name = log_config.name
-                ),
-            };
+            tracing::info!(
+                message = msg,
+                app_env = log_config.app_env,
+                name = log_config.name
+            )
         } else {
-            match metadata {
-                Some(val) => tracing::info!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    metadata = ?val.data
-                ),
-                None => tracing::info!(message = msg, app_env = log_config.app_env,),
-            };
+            tracing::info!(message = msg, app_env = log_config.app_env,)
         };
     }
 
@@ -571,43 +527,22 @@ impl RustLogger {
     /// # Arguments
     ///
     /// * `message` - The message to log
+    /// * `args` - The arguments to log
+    /// * `log_config` - The configuration for the logger
     ///
-    pub fn debug(
-        &self,
-        message: &str,
-        args: Option<Vec<String>>,
-        metadata: Option<&LogMetadata>,
-        log_config: &LogConfig,
-    ) {
+    pub fn debug(&self, message: &str, args: Option<Vec<String>>, log_config: &LogConfig) {
         let msg = match args {
             Some(val) => format_string(message, &val),
             None => message.to_string(),
         };
         if log_config.name.is_some() {
-            match metadata {
-                Some(val) => tracing::debug!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    name = log_config.name,
-                    metadata = ?val.data
-                ),
-                None => {
-                    tracing::debug!(
-                        message = msg,
-                        app_env = log_config.app_env,
-                        name = log_config.name
-                    )
-                }
-            };
+            tracing::debug!(
+                message = msg,
+                app_env = log_config.app_env,
+                name = log_config.name
+            )
         } else {
-            match metadata {
-                Some(val) => tracing::debug!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    metadata = ?val.data
-                ),
-                None => tracing::debug!(message = msg, app_env = log_config.app_env),
-            };
+            tracing::debug!(message = msg, app_env = log_config.app_env)
         };
     }
 
@@ -616,41 +551,22 @@ impl RustLogger {
     /// # Arguments
     ///
     /// * `message` - The message to log
+    /// * `args` - The arguments to log
+    /// * `log_config` - The configuration for the logger
     ///
-    pub fn warning(
-        &self,
-        message: &str,
-        args: Option<Vec<String>>,
-        metadata: Option<&LogMetadata>,
-        log_config: &LogConfig,
-    ) {
+    pub fn warning(&self, message: &str, args: Option<Vec<String>>, log_config: &LogConfig) {
         let msg = match args {
             Some(val) => format_string(message, &val),
             None => message.to_string(),
         };
         if log_config.name.is_some() {
-            match metadata {
-                Some(val) => tracing::warn!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    name = log_config.name,
-                    metadata = ?val.data
-                ),
-                None => tracing::warn!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    name = log_config.name
-                ),
-            };
+            tracing::warn!(
+                message = msg,
+                app_env = log_config.app_env,
+                name = log_config.name
+            )
         } else {
-            match metadata {
-                Some(val) => tracing::warn!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    metadata = ?val.data
-                ),
-                None => tracing::warn!(message = msg, app_env = log_config.app_env),
-            };
+            tracing::warn!(message = msg, app_env = log_config.app_env)
         };
     }
 
@@ -659,41 +575,22 @@ impl RustLogger {
     /// # Arguments
     ///
     /// * `message` - The message to log
+    /// * `args` - The arguments to log
+    /// * `log_config` - The configuration for the logger
     ///
-    pub fn error(
-        &self,
-        message: &str,
-        args: Option<Vec<String>>,
-        metadata: Option<&LogMetadata>,
-        log_config: &LogConfig,
-    ) {
+    pub fn error(&self, message: &str, args: Option<Vec<String>>, log_config: &LogConfig) {
         let msg = match args {
             Some(val) => format_string(message, &val),
             None => message.to_string(),
         };
         if log_config.name.is_some() {
-            match metadata {
-                Some(val) => tracing::error!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    name = log_config.name,
-                    metadata = ?val.data
-                ),
-                None => tracing::error!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    name = log_config.name
-                ),
-            };
+            tracing::error!(
+                message = msg,
+                app_env = log_config.app_env,
+                name = log_config.name
+            )
         } else {
-            match metadata {
-                Some(val) => tracing::error!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    metadata = ?val.data
-                ),
-                None => tracing::error!(message = msg, app_env = log_config.app_env),
-            };
+            tracing::error!(message = msg, app_env = log_config.app_env)
         };
     }
 
@@ -702,41 +599,22 @@ impl RustLogger {
     /// # Arguments
     ///
     /// * `message` - The message to log
+    /// * `args` - The arguments to log
+    /// * `log_config` - The configuration for the logger
     ///
-    pub fn trace(
-        &self,
-        message: &str,
-        args: Option<Vec<String>>,
-        metadata: Option<&LogMetadata>,
-        log_config: &LogConfig,
-    ) {
+    pub fn trace(&self, message: &str, args: Option<Vec<String>>, log_config: &LogConfig) {
         let msg = match args {
             Some(val) => format_string(message, &val),
             None => message.to_string(),
         };
         if log_config.name.is_some() {
-            match metadata {
-                Some(val) => tracing::trace!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    name = log_config.name,
-                    metadata = ?val.data
-                ),
-                None => tracing::trace!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    name = log_config.name
-                ),
-            };
+            tracing::trace!(
+                message = msg,
+                app_env = log_config.app_env,
+                name = log_config.name
+            )
         } else {
-            match metadata {
-                Some(val) => tracing::trace!(
-                    message = msg,
-                    app_env = log_config.app_env,
-                    metadata = ?val.data
-                ),
-                None => tracing::error!(message = msg, app_env = log_config.app_env),
-            };
+            tracing::error!(message = msg, app_env = log_config.app_env)
         };
     }
 }

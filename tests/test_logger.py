@@ -158,3 +158,23 @@ def test_metadata():
 
         assert "test" in result
         shutil.rmtree("log", ignore_errors=False)
+
+
+def test_invalid_config_format():
+    logger.config = LogConfig(
+        stderr=False,
+        stdout=False,
+        time_format="[hour]:[minute]",
+        lock_guard=True,
+    )
+    logger.name = __file__
+
+    # Logger will default to stdout true if not set
+    assert logger.config.stdout == True
+    logger.info("blah")
+
+
+def test_info_logger_stdout_args():
+    # turn of guard locking for last test
+    logger.config = LogConfig(lock_guard=True)
+    logger.info("test info {} {} {} ", "test", 10.43, {"test": "test"})

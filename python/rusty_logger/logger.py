@@ -1,6 +1,6 @@
 from typing import Optional
 from ._rusty_logger import Logger
-from ._rusty_logger import LogConfig, LogMetadata, JsonConfig, LogLevel, LogFileConfig
+from ._rusty_logger import LogConfig, LogMetadata, JsonConfig
 
 
 class RustyLogger:
@@ -53,7 +53,7 @@ class RustyLogger:
         # reload logger
         self._logger = Logger.get_logger(config=self._logger.config)
 
-    def info(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
+    def info(self, msg, *args) -> None:
         """Logs a message at the INFO level.
 
         Args:
@@ -62,11 +62,7 @@ class RustyLogger:
             metadata:
                 Optional metadata to associate with the log.
         """
-        self._logger.info(
-            message=message,
-            metadata=metadata,
-            *args,
-        )
+        self._logger.info(msg, *args)
 
     def debug(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
         """Logs a message at the DEBUG level.
