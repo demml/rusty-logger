@@ -1,6 +1,6 @@
 from typing import Optional
 from ._rusty_logger import Logger
-from ._rusty_logger import LogConfig, LogMetadata, JsonConfig
+from ._rusty_logger import LogConfig, JsonConfig
 
 
 class RustyLogger:
@@ -53,7 +53,7 @@ class RustyLogger:
         # reload logger
         self._logger = Logger.get_logger(config=self._logger.config)
 
-    def info(self, msg, *args) -> None:
+    def info(self, message, *args) -> None:
         """Logs a message at the INFO level.
 
         Args:
@@ -62,9 +62,9 @@ class RustyLogger:
             metadata:
                 Optional metadata to associate with the log.
         """
-        self._logger.info(msg, *args)
+        self._logger.info(message, *args)
 
-    def debug(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
+    def debug(self, message: str, *args) -> None:
         """Logs a message at the DEBUG level.
 
         Args:
@@ -73,13 +73,9 @@ class RustyLogger:
             metadata:
                 Optional metadata to associate with the log.
         """
-        self._logger.debug(
-            message=message,
-            metadata=metadata,
-            *args,
-        )
+        self._logger.debug(message, *args)
 
-    def warning(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
+    def warning(self, message, *args) -> None:
         """Logs a message at the WARNING level.
 
         Args:
@@ -88,13 +84,9 @@ class RustyLogger:
             metadata:
                 Optional metadata to associate with the log.
         """
-        self._logger.warning(
-            message=message,
-            metadata=metadata,
-            *args,
-        )
+        self._logger.warning(message, *args)
 
-    def error(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
+    def error(self, message, *args) -> None:
         """Logs a message at the ERROR level.
 
         Args:
@@ -103,13 +95,9 @@ class RustyLogger:
             metadata:
                 Optional metadata to associate with the log.
         """
-        self._logger.error(
-            message=message,
-            metadata=metadata,
-            *args,
-        )
+        self._logger.error(message, *args)
 
-    def trace(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
+    def trace(self, message, *args) -> None:
         """Logs a message at the TRACE level.
 
         Args:
@@ -118,8 +106,4 @@ class RustyLogger:
             metadata:
                 Optional metadata to associate with the log.
         """
-        self._logger.trace(
-            message=message,
-            metadata=metadata,
-            *args,
-        )
+        self._logger.trace(message, *args)

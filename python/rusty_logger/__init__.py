@@ -1,7 +1,7 @@
 # pylint: disable=no-name-in-module
 
 
-from ._rusty_logger import LogConfig, LogMetadata, JsonConfig, LogLevel, LogFileConfig
+from ._rusty_logger import LogConfig, JsonConfig, LogLevel, LogFileConfig
 from .logger import RustyLogger
 from .version import __version__
 

@@ -618,3 +618,151 @@ impl RustLogger {
         };
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{JsonConfig, LogConfig, LogFileConfig, RustLogger};
+
+    fn generate_test_file_config(
+        level: String,
+        stdout: bool,
+        stderr: bool,
+        rotate: &str,
+        filename: &str,
+    ) -> LogConfig {
+        LogConfig {
+            stdout,
+            stderr,
+            level,
+            app_env: "development".to_string(),
+            target: false,
+            name: None,
+            time_format:
+                "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
+                    .to_string(),
+            json_config: Some(JsonConfig::new(None)),
+            file_config: Some(LogFileConfig::new(
+                Some(filename.to_string()),
+                Some(rotate.to_string()),
+            )),
+            lock_guard: true,
+        }
+    }
+
+    fn generate_test_json_config(level: String, stdout: bool, stderr: bool) -> LogConfig {
+        LogConfig {
+            stdout,
+            stderr,
+            level,
+            app_env: "development".to_string(),
+            target: false,
+            name: None,
+            time_format:
+                "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
+                    .to_string(),
+            json_config: Some(JsonConfig::new(None)),
+            file_config: None,
+            lock_guard: true,
+        }
+    }
+
+    fn generate_test_incorrect_config() -> LogConfig {
+        LogConfig {
+            stdout: false,
+            stderr: false,
+            level: "INFO".to_string(),
+            app_env: "development".to_string(),
+            target: false,
+            name: None,
+            time_format:
+                "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
+                    .to_string(),
+            json_config: Some(JsonConfig::new(None)),
+            file_config: None,
+            lock_guard: true,
+        }
+    }
+
+    #[test]
+    fn test_stdout_logger() {
+        let levels = ["INFO", "DEBUG", "WARN", "ERROR", "TRACE"];
+
+        levels.iter().for_each(|level| {
+            let args = Some(vec!["10".to_string(), "10".to_string()]);
+            let config = generate_test_json_config(level.to_string(), true, false);
+            let logger = RustLogger::new(&config);
+            logger.info("test", args.clone(), &config);
+            logger.debug("test", args.clone(), &config);
+            logger.warning("test", args.clone(), &config);
+            logger.error("test", args.clone(), &config);
+            logger.trace("test", args.clone(), &config);
+        });
+    }
+
+    #[test]
+    fn test_stderr_logger() {
+        let levels = ["INFO", "DEBUG", "WARN", "ERROR", "TRACE"];
+
+        levels.iter().for_each(|level| {
+            let config = generate_test_json_config(level.to_string(), false, true);
+            let logger = RustLogger::new(&config);
+            logger.info("test", None, &config);
+            logger.debug("test", None, &config);
+            logger.warning("test", None, &config);
+            logger.error("test", None, &config);
+            logger.trace("test", None, &config);
+        });
+    }
+
+    #[test]
+    fn test_file_logger_minute() {
+        let config = generate_test_file_config(
+            "INFO".to_string(),
+            true,
+            false,
+            "minutely",
+            "minute/log.log",
+        );
+        let logger = RustLogger::new(&config);
+        logger.info("test", None, &config);
+
+        std::fs::remove_dir_all("minute").unwrap();
+    }
+
+    #[test]
+    fn test_file_logger_hourly() {
+        let config =
+            generate_test_file_config("INFO".to_string(), true, false, "hourly", "hourly/log.log");
+        let logger = RustLogger::new(&config);
+        logger.info("test", None, &config);
+
+        std::fs::remove_dir_all("hourly").unwrap();
+    }
+
+    #[test]
+    fn test_file_logger_daily() {
+        let config =
+            generate_test_file_config("INFO".to_string(), true, false, "daily", "daily/log.log");
+        let logger = RustLogger::new(&config);
+        logger.info("test", None, &config);
+
+        std::fs::remove_dir_all("daily").unwrap();
+    }
+
+    #[test]
+    fn test_file_logger_never() {
+        let config =
+            generate_test_file_config("INFO".to_string(), true, false, "never", "never/log.log");
+        let logger = RustLogger::new(&config);
+        logger.info("test", None, &config);
+
+        std::fs::remove_dir_all("never").unwrap();
+    }
+
+    #[test]
+    fn test_invalid_output() {
+        let config = generate_test_incorrect_config();
+        let logger = RustLogger::new(&config);
+        logger.info("test", None, &config);
+    }
+}
