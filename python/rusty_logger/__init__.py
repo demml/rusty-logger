@@ -11,5 +11,6 @@ logger = RustyLogger(
     config=LogConfig(
         stdout=True,
         level=LogLevel.INFO,
+        lock_guard=True,
     )
 )

@@ -1,7 +1,6 @@
 import glob
 from rusty_logger import LogConfig, JsonConfig, LogLevel, LogFileConfig, __version__, logger
 import shutil
-import json
 
 """All tests are performed with guard locking
 Guard locking is a feature that allows you to lock a logger to a specific context that is dropped on end of context.
