@@ -140,6 +140,9 @@ impl PyLogger {
         let mut config = self.config.clone();
         config.json_config = Some(JsonConfig::new(None));
         self.config = config;
+
+        self.drop_guard();
+        self.logger = RustLogger::new(&self.config);
     }
 
     /// Log at INFO level
@@ -240,7 +243,7 @@ impl PyLogger {
 
 #[cfg(test)]
 mod tests {
-    use super::{LogConfig, PyLogger};
+    use super::{JsonConfig, LogConfig, PyLogger};
     use crate::logger::rust_logger::LogFileConfig;
     use pyo3::prelude::*;
     use pyo3::types::PyTuple;
@@ -257,11 +260,25 @@ mod tests {
     }
 
     #[test]
-    fn test_pylogger() {
+    fn test_pylogger_json() {
+        pyo3::prepare_freethreaded_python();
         Python::with_gil(|py| {
+            let config = LogConfig::new(
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(JsonConfig::new(None)),
+                Some(LogFileConfig::new(Some("log/test.log".to_string()), None)),
+                Some(true),
+            );
             let elements: Vec<i32> = vec![0, 1];
             let tuple: &PyTuple = PyTuple::new(py, elements);
-            let logger = PyLogger::new(None).unwrap();
+            let mut logger = PyLogger::new(Some(config)).unwrap();
+            logger.json();
             logger.info("Hello World {} {}", tuple);
 
             let lines = read_lines("log/test.log").unwrap();
@@ -282,23 +299,13 @@ mod tests {
     }
 
     #[test]
-    fn test_pylogger_json() {
+    fn test_pylogger() {
+        pyo3::prepare_freethreaded_python();
         Python::with_gil(|py| {
-            let config = LogConfig::new(
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(LogFileConfig::new(Some("log/test.log".to_string()), None)),
-                None,
-            );
             let elements: Vec<i32> = vec![0, 1];
             let tuple: &PyTuple = PyTuple::new(py, elements);
-            let mut logger = PyLogger::new(Some(config)).unwrap();
+            let mut logger = PyLogger::new(None).unwrap();
+            logger.info("Hello World {} {}", tuple);
             logger.json();
             logger.info("Hello World {} {}", tuple);
         });
