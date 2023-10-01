@@ -1,5 +1,5 @@
 import glob
-from rusty_logger import LogConfig, LogMetadata, JsonConfig, LogLevel, LogFileConfig, __version__, logger
+from rusty_logger import LogConfig, JsonConfig, LogLevel, LogFileConfig, __version__, logger
 import shutil
 import json
 
