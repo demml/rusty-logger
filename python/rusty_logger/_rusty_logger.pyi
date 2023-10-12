@@ -153,6 +153,10 @@ class Logger:
                 The level to log at.
         """
         ...
+    @property
+    def config(self) -> LogConfig:
+        """The configuration for the logger."""
+        ...
     def info(self, message: str, *args) -> None:
         """Logs a message at the INFO level.
 

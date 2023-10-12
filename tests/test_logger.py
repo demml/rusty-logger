@@ -1,5 +1,5 @@
 import glob
-from rusty_logger import LogConfig, JsonConfig, LogLevel, LogFileConfig, __version__, logger
+from rusty_logger import LogConfig, JsonConfig, LogLevel, LogFileConfig, __version__, Logger
 import shutil
 
 """All tests are performed with guard locking
@@ -33,8 +33,10 @@ def test_log_level():
 
 
 def test_info_logger_stdout():
-    logger.config = LogConfig(lock_guard=True)
-    logger.name = __file__
+    logger = Logger.get_logger(
+        name=__file__,
+        config=LogConfig(lock_guard=True),
+    )
     logger.info("test info")
     logger.debug("test debug")
     logger.warning("test warning")
@@ -44,12 +46,14 @@ def test_info_logger_stdout():
 
 def test_debug_logger_file():
     file_config = LogFileConfig(filename="log/test.log")
-    logger.config = LogConfig(
-        level="DEBUG",
-        file_config=file_config,
-        lock_guard=True,
+    logger = Logger.get_logger(
+        name=__file__,
+        config=LogConfig(
+            lock_guard=True,
+            file_config=file_config,
+            level="DEBUG",
+        ),
     )
-    logger.name = __file__
 
     logger.info("test info")
     logger.debug("test debug")
@@ -69,13 +73,16 @@ def test_debug_logger_file():
 
 def test_warn_logger_file():
     file_config = LogFileConfig(filename="log/test.log")
-    logger.config = LogConfig(
-        level="TRACE",
-        json_config=JsonConfig(flatten=True),
-        file_config=file_config,
-        lock_guard=True,
+    logger = Logger.get_logger(
+        name=__file__,
+        config=LogConfig(
+            level="TRACE",
+            json_config=JsonConfig(flatten=True),
+            file_config=file_config,
+            lock_guard=True,
+        ),
     )
-    logger.name = __name__
+
     logger.info("test info")
     logger.debug("test debug")
     logger.warning("test warning")
@@ -95,12 +102,16 @@ def test_warn_logger_file():
 
 def test_error_logger_file():
     file_config = LogFileConfig(filename="log/test.log")
-    logger.config = LogConfig(
-        level="ERROR",
-        file_config=file_config,
-        lock_guard=True,
+    logger = Logger.get_logger(
+        name=__name__,
+        config=LogConfig(
+            level="ERROR",
+            json_config=JsonConfig(flatten=True),
+            file_config=file_config,
+            lock_guard=True,
+        ),
     )
-    logger.name = __name__
+
     logger.info("test info")
     logger.debug("test debug")
     logger.warning("test warning")
@@ -135,13 +146,15 @@ def test_modules():
 
 
 def test_invalid_config_format():
-    logger.config = LogConfig(
-        stderr=False,
-        stdout=False,
-        time_format="[hour]:[minute]",
-        lock_guard=True,
+    logger = Logger.get_logger(
+        name=__file__,
+        config=LogConfig(
+            stderr=False,
+            stdout=False,
+            time_format="[hour]:[minute]",
+            lock_guard=True,
+        ),
     )
-    logger.name = __file__
 
     # Logger will default to stdout true if not set
     assert logger.config.stdout == True
@@ -149,6 +162,12 @@ def test_invalid_config_format():
 
 
 def test_info_logger_stdout_args():
-    # turn of guard locking for last test
-    logger.config = LogConfig(lock_guard=True)
+    # turn off guard locking for last test
+    logger = Logger.get_logger(
+        name=__file__,
+        config=LogConfig(
+            lock_guard=True,
+        ),
+    )
+
     logger.info("test info {} {} {} ", "test", 10.43, {"test": "test"})
