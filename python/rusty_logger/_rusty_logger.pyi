@@ -131,12 +131,18 @@ class LogConfig:
         ...
 
 class RustyLogger:
-    def __init__(self, config: Optional[LogConfig] = None):
-        """Creates a new instance of RustyLogger.
+    @classmethod
+    def get_logger(self, name: Optional[str] = None, config: Optional[LogConfig] = None) -> RustyLogger:
+        """Gets a new logger.
 
         Args:
+            name:
+                Name to record with logger. Usually this is the name of the module that is using the logger
             config:
-                The configuration for the logger.
+                The configuration for the logger
+
+        Returns:
+            `RustyLogger`
         """
         ...
     def set_level(self, level: str) -> None:
@@ -147,26 +153,14 @@ class RustyLogger:
                 The level to log at.
         """
         ...
-    @property
-    def name(self) -> Optional[str]:
-        """The name of the logger."""
-        ...
-    @property
-    def config(self) -> LogConfig:
-        """The configuration for the logger. If config if provided,
-        this will reload the logger with the new configuration"""
-        ...
-    def json(self) -> None:
-        """Converts logger to default logger"""
-        ...
     def info(self, message: str, *args) -> None:
         """Logs a message at the INFO level.
 
         Args:
             message:
-                The message to log.
-            metadata:
-                Optional metadata to associate with the log.
+                The message to log
+            args:
+                Args to format the message with
         """
         ...
     def debug(self, message: str, *args) -> None:
@@ -174,9 +168,9 @@ class RustyLogger:
 
         Args:
             message:
-                The message to log.
-            metadata:
-                Optional metadata to associate with the log.
+                The message to log
+            args:
+                Args to format the message with
         """
         ...
     def warning(self, message: str, *args) -> None:
@@ -184,9 +178,9 @@ class RustyLogger:
 
         Args:
             message:
-                The message to log.
-            metadata:
-                Optional metadata to associate with the log.
+                The message to log
+            args:
+                Args to format the message with
         """
         ...
     def error(self, message: str, *args) -> None:
@@ -194,9 +188,9 @@ class RustyLogger:
 
         Args:
             message:
-                The message to log.
-            metadata:
-                Optional metadata to associate with the log.
+                The message to log
+            args:
+                Args to format the message with
         """
         ...
     def trace(self, message: str, *args) -> None:
@@ -204,8 +198,8 @@ class RustyLogger:
 
         Args:
             message:
-                The message to log.
-            metadata:
-                Optional metadata to associate with the log.
+                The message to log
+            args:
+                Args to format the message with
         """
         ...
