@@ -60,7 +60,7 @@ pub fn parse_args(args: &PyTuple) -> Option<Vec<String>> {
     args
 }
 
-#[pyclass(name = "RustyLogger", subclass)]
+#[pyclass(name = "Logger", subclass)]
 pub struct PyLogger {
     logger: RustLogger,
     pub config: LogConfig,

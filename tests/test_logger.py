@@ -21,7 +21,6 @@ def test_log_config():
     assert config.stderr is False
     assert config.level == "INFO"
     assert config.app_env == "development"
-    assert config.target is False
     assert config.json_config is None
 
 

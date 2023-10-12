@@ -130,7 +130,7 @@ class LogConfig:
         """Boolean indicating whether to lock this logger to current context"""
         ...
 
-class RustyLogger:
+class Logger:
     @classmethod
     def get_logger(self, name: Optional[str] = None, config: Optional[LogConfig] = None) -> RustyLogger:
         """Gets a new logger.

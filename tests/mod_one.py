@@ -1,15 +1,16 @@
-from typing import Optional
-from rusty_logger import logger, LogConfig, JsonConfig, LogFileConfig
+from rusty_logger import Logger, LogConfig, JsonConfig, LogFileConfig
 
 
-logger.config = LogConfig(
-    json_config=JsonConfig(),
-    file_config=LogFileConfig(
-        filename="log/test.log",
+logger = Logger.get_logger(
+    name=__file__,
+    config=LogConfig(
+        json_config=JsonConfig(),
+        file_config=LogFileConfig(
+            filename="log/test.log",
+        ),
+        lock_guard=True,
     ),
-    lock_guard=True,
 )
-logger.name = __file__
 
 
 class TestOne:
