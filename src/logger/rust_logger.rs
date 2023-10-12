@@ -88,9 +88,6 @@ pub struct LogConfig {
     pub app_env: String,
 
     #[pyo3(get, set)]
-    pub target: bool,
-
-    #[pyo3(get, set)]
     pub name: Option<String>,
 
     #[pyo3(get, set)]
@@ -116,7 +113,6 @@ impl LogConfig {
         stderr: Option<bool>,
         level: Option<String>,
         app_env: Option<String>,
-        target: Option<bool>,
         name: Option<String>,
         time_format: Option<String>,
         json_config: Option<JsonConfig>,
@@ -156,7 +152,6 @@ impl LogConfig {
             level: level.unwrap_or_else(|| "INFO".to_string()),
             app_env: log_env,
             name,
-            target: target.unwrap_or(false),
             time_format: time_format.unwrap_or_else(|| DEFAULT_TIME_PATTERN.to_string()),
             json_config,
             file_config,
@@ -363,7 +358,6 @@ impl RustLogger {
         let timer = RustLogger::get_timer(log_config.time_format.clone());
 
         let layer = tracing_subscriber::fmt::layer()
-            .with_target(log_config.target)
             .json()
             .flatten_event(flatten)
             .with_timer(timer)
@@ -421,7 +415,6 @@ impl RustLogger {
     {
         let timer = RustLogger::get_timer(log_config.time_format.clone());
         let layer = tracing_subscriber::fmt::layer()
-            .with_target(log_config.target)
             .with_timer(timer)
             .with_writer(writer)
             .boxed();
@@ -631,7 +624,6 @@ mod tests {
             stderr,
             level,
             app_env: "development".to_string(),
-            target: false,
             name: None,
             time_format:
                 "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
@@ -651,7 +643,6 @@ mod tests {
             stderr,
             level,
             app_env: "development".to_string(),
-            target: false,
             name: None,
             time_format:
                 "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"
@@ -668,7 +659,6 @@ mod tests {
             stderr: false,
             level: "INFO".to_string(),
             app_env: "development".to_string(),
-            target: false,
             name: None,
             time_format:
                 "[year]-[month]-[day] [hour repr:24]:[minute]:[second]::[subsecond digits:4]"

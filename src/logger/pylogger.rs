@@ -1,4 +1,4 @@
-use crate::logger::rust_logger::{JsonConfig, LogConfig, RustLogger};
+use crate::logger::rust_logger::{LogConfig, RustLogger};
 use pyo3::prelude::*;
 use pyo3::types::{PyTuple, PyType};
 use serde_json::{json, to_string_pretty};
@@ -40,17 +40,22 @@ impl LogLevel {
     }
 }
 
-pub fn parse_args(args: &PyTuple) -> Vec<String> {
-    let args = args
-        .iter()
-        .map(|x| match x.extract::<PyTypes>() {
-            Ok(PyTypes::CatchAll(c)) => c.to_string(),
-            Err(e) => {
-                println!("Error: {}", e);
-                "".to_string()
-            }
-        })
-        .collect::<Vec<String>>();
+pub fn parse_args(args: &PyTuple) -> Option<Vec<String>> {
+    let args: Option<Vec<String>> = if args.is_empty() {
+        None
+    } else {
+        Some(
+            args.iter()
+                .map(|x| match x.extract::<PyTypes>() {
+                    Ok(PyTypes::CatchAll(c)) => c.to_string(),
+                    Err(e) => {
+                        println!("Error: {}", e);
+                        "".to_string()
+                    }
+                })
+                .collect::<Vec<String>>(),
+        )
+    };
 
     args
 }
@@ -81,7 +86,7 @@ impl PyLogger {
 
         let mut log_config = config.unwrap_or_else(|| {
             // get default
-            LogConfig::new(None, None, None, None, None, None, None, None, None, None)
+            LogConfig::new(None, None, None, None, None, None, None, None, None)
         });
         log_config.name = name;
 
@@ -112,12 +117,7 @@ impl PyLogger {
     ///
     #[pyo3(signature = (message, *args))]
     pub fn info(&self, message: &str, args: &PyTuple) {
-        let args = if args.is_empty() {
-            None
-        } else {
-            Some(parse_args(args))
-        };
-
+        let args = parse_args(args);
         self.logger.info(message, args, &self.config);
     }
 
@@ -129,11 +129,7 @@ impl PyLogger {
     ///
     #[pyo3(signature = (message, *args))]
     pub fn debug(&self, message: &str, args: &PyTuple) {
-        let args = if args.is_empty() {
-            None
-        } else {
-            Some(parse_args(args))
-        };
+        let args = parse_args(args);
         self.logger.debug(message, args, &self.config);
     }
 
@@ -145,11 +141,7 @@ impl PyLogger {
     ///
     #[pyo3(signature = (message, *args))]
     pub fn warning(&self, message: &str, args: &PyTuple) {
-        let args = if args.is_empty() {
-            None
-        } else {
-            Some(parse_args(args))
-        };
+        let args = parse_args(args);
         self.logger.warning(message, args, &self.config);
     }
 
@@ -162,11 +154,7 @@ impl PyLogger {
     ///
     #[pyo3(signature = (message, *args))]
     pub fn error(&self, message: &str, args: &PyTuple) {
-        let args = if args.is_empty() {
-            None
-        } else {
-            Some(parse_args(args))
-        };
+        let args = parse_args(args);
         self.logger.error(message, args, &self.config);
     }
 
@@ -179,11 +167,7 @@ impl PyLogger {
     ///
     #[pyo3(signature = (message, *args))]
     pub fn trace(&self, message: &str, args: &PyTuple) {
-        let args = if args.is_empty() {
-            None
-        } else {
-            Some(parse_args(args))
-        };
+        let args = parse_args(args);
         self.logger.trace(message, args, &self.config);
     }
 
