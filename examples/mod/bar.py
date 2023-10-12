@@ -1,7 +1,7 @@
-from custom_logger import logger
+from subclass_logger import JsonLogger
 
 
-logger.name = __file__
+logger = JsonLogger.get_logger(__file__)
 
 
 def bar():
