@@ -509,14 +509,13 @@ impl RustLogger {
             None => message.to_string(),
         };
 
-        if log_config.name.is_some() {
-            tracing::info!(
+        match log_config.name {
+            Some(ref val) => tracing::info!(
                 message = msg,
                 app_env = log_config.app_env,
-                name = log_config.name
-            )
-        } else {
-            tracing::info!(message = msg, app_env = log_config.app_env,)
+                name = val.as_str()
+            ),
+            None => tracing::info!(message = msg, app_env = log_config.app_env),
         };
     }
 
@@ -533,14 +532,13 @@ impl RustLogger {
             Some(val) => format_string(message, &val),
             None => message.to_string(),
         };
-        if log_config.name.is_some() {
-            tracing::debug!(
+        match log_config.name {
+            Some(ref val) => tracing::debug!(
                 message = msg,
                 app_env = log_config.app_env,
-                name = log_config.name
-            )
-        } else {
-            tracing::debug!(message = msg, app_env = log_config.app_env)
+                name = val.as_str()
+            ),
+            None => tracing::debug!(message = msg, app_env = log_config.app_env),
         };
     }
 
@@ -557,14 +555,13 @@ impl RustLogger {
             Some(val) => format_string(message, &val),
             None => message.to_string(),
         };
-        if log_config.name.is_some() {
-            tracing::warn!(
+        match log_config.name {
+            Some(ref val) => tracing::warn!(
                 message = msg,
                 app_env = log_config.app_env,
-                name = log_config.name
-            )
-        } else {
-            tracing::warn!(message = msg, app_env = log_config.app_env)
+                name = val.as_str()
+            ),
+            None => tracing::warn!(message = msg, app_env = log_config.app_env),
         };
     }
 
@@ -581,14 +578,13 @@ impl RustLogger {
             Some(val) => format_string(message, &val),
             None => message.to_string(),
         };
-        if log_config.name.is_some() {
-            tracing::error!(
+        match log_config.name {
+            Some(ref val) => tracing::error!(
                 message = msg,
                 app_env = log_config.app_env,
-                name = log_config.name
-            )
-        } else {
-            tracing::error!(message = msg, app_env = log_config.app_env)
+                name = val.as_str()
+            ),
+            None => tracing::error!(message = msg, app_env = log_config.app_env),
         };
     }
 
@@ -605,14 +601,13 @@ impl RustLogger {
             Some(val) => format_string(message, &val),
             None => message.to_string(),
         };
-        if log_config.name.is_some() {
-            tracing::trace!(
+        match log_config.name {
+            Some(ref val) => tracing::trace!(
                 message = msg,
                 app_env = log_config.app_env,
-                name = log_config.name
-            )
-        } else {
-            tracing::error!(message = msg, app_env = log_config.app_env)
+                name = val.as_str()
+            ),
+            None => tracing::trace!(message = msg, app_env = log_config.app_env),
         };
     }
 }
@@ -660,7 +655,7 @@ mod tests {
             json_config: Some(JsonConfig::new(None)),
             file_config: None,
             lock_guard: true,
-            thread_id: false,
+            thread_id: true,
         }
     }
 
@@ -677,7 +672,7 @@ mod tests {
             json_config: Some(JsonConfig::new(None)),
             file_config: None,
             lock_guard: true,
-            thread_id: false,
+            thread_id: true,
         }
     }
 

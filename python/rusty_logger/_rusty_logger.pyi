@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional
 
 class LogLevel:
     """Enum for log levels"""
@@ -63,6 +63,7 @@ class LogConfig:
         app_env: str = "development",
         time_format: str = "[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]",
         lock_guard: bool = False,
+        thread_id: bool = False,
         json_config: Optional[JsonConfig] = None,
         file_config: Optional[LogFileConfig] = None,
     ):
@@ -84,12 +85,14 @@ class LogConfig:
                 Name to record when logging events. Usually this is the name of the module that is using the logger
             time_format:
                 The time format to use for logs
+            lock_guard:
+                Boolean indicating whether to lock this logger to current context. Usually this will be false
+            thread_id:
+                Whether to record the thread id in logs
             json_config:
                 Optional json logger configuration
             file_config:
                 Optional file logger configuration
-            lock_guard:
-                Boolean indicating whether to lock this logger to current context. Usually this will be false
         """
         ...
     @property
@@ -128,6 +131,10 @@ class LogConfig:
     @property
     def lock_guard(self) -> bool:
         """Boolean indicating whether to lock this logger to current context"""
+        ...
+    @property
+    def thread_id(self) -> bool:
+        """Whether to record the thread id in logs"""
         ...
 
 class Logger:
