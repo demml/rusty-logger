@@ -132,7 +132,7 @@ class LogConfig:
 
 class Logger:
     @classmethod
-    def get_logger(self, name: Optional[str] = None, config: Optional[LogConfig] = None) -> RustyLogger:
+    def get_logger(self, name: Optional[str] = None, config: Optional[LogConfig] = None) -> Logger:
         """Gets a new logger.
 
         Args:

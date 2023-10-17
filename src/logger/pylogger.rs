@@ -2,6 +2,7 @@ use crate::logger::rust_logger::{LogConfig, RustLogger};
 use pyo3::prelude::*;
 use pyo3::types::{PyTuple, PyType};
 use serde_json::{json, to_string_pretty};
+use std::collections::HashMap;
 
 #[derive(FromPyObject, Debug)]
 enum PyTypes<'a> {
@@ -88,7 +89,7 @@ impl PyLogger {
 
         let mut log_config = config.unwrap_or_else(|| {
             // get default
-            LogConfig::new(None, None, None, None, None, None, None, None, None)
+            LogConfig::new(None, None, None, None, None, None, None, None, None, None)
         });
         log_config.name = name;
 
@@ -117,8 +118,8 @@ impl PyLogger {
     /// * `message` - The message to log
     /// * `args` - The arguments to log
     ///
-    #[pyo3(signature = (message, *args))]
-    pub fn info(&self, message: &str, args: &PyTuple) {
+    #[pyo3(signature = (message, *args, **kwargs))]
+    pub fn info(&self, message: &str, args: &PyTuple, kwargs: Option<HashMap<&str, &str>>) {
         let args = parse_args(args);
         self.logger.info(message, args, &self.config);
     }

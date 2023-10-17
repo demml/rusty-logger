@@ -101,6 +101,9 @@ pub struct LogConfig {
 
     #[pyo3(get, set)]
     pub lock_guard: bool,
+
+    #[pyo3(get, set)]
+    pub thread_id: bool,
 }
 
 #[pymethods]
@@ -118,6 +121,7 @@ impl LogConfig {
         json_config: Option<JsonConfig>,
         file_config: Option<LogFileConfig>,
         lock_guard: Option<bool>,
+        thread_id: Option<bool>,
     ) -> Self {
         let log_env = match app_env {
             Some(val) => val,
@@ -156,6 +160,7 @@ impl LogConfig {
             json_config,
             file_config,
             lock_guard: lock_guard.unwrap_or(false),
+            thread_id: thread_id.unwrap_or(false),
         }
     }
 
@@ -358,8 +363,10 @@ impl RustLogger {
         let timer = RustLogger::get_timer(log_config.time_format.clone());
 
         let layer = tracing_subscriber::fmt::layer()
+            .with_target(false)
             .json()
             .flatten_event(flatten)
+            .with_thread_ids(log_config.thread_id)
             .with_timer(timer)
             .with_writer(writer)
             .boxed();
@@ -415,6 +422,8 @@ impl RustLogger {
     {
         let timer = RustLogger::get_timer(log_config.time_format.clone());
         let layer = tracing_subscriber::fmt::layer()
+            .with_target(false)
+            .with_thread_ids(log_config.thread_id)
             .with_timer(timer)
             .with_writer(writer)
             .boxed();
@@ -634,6 +643,7 @@ mod tests {
                 Some(rotate.to_string()),
             )),
             lock_guard: true,
+            thread_id: false,
         }
     }
 
@@ -650,6 +660,7 @@ mod tests {
             json_config: Some(JsonConfig::new(None)),
             file_config: None,
             lock_guard: true,
+            thread_id: false,
         }
     }
 
@@ -666,6 +677,7 @@ mod tests {
             json_config: Some(JsonConfig::new(None)),
             file_config: None,
             lock_guard: true,
+            thread_id: false,
         }
     }
 
