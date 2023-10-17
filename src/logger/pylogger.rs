@@ -81,12 +81,6 @@ impl PyLogger {
     /// A new logger
     #[classmethod]
     pub fn get_logger(cls: &PyType, name: Option<String>, config: Option<LogConfig>) -> PyLogger {
-        let name = if name.is_none() {
-            None
-        } else {
-            Some(name.unwrap())
-        };
-
         let mut log_config = config.unwrap_or_else(|| {
             // get default
             LogConfig::new(None, None, None, None, None, None, None, None, None, None)
