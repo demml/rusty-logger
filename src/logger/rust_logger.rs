@@ -362,16 +362,14 @@ impl RustLogger {
         let flatten = log_config.json_config.as_ref().unwrap().flatten;
         let timer = RustLogger::get_timer(log_config.time_format.clone());
 
-        let layer = tracing_subscriber::fmt::layer()
+        tracing_subscriber::fmt::layer()
             .with_target(false)
             .json()
             .flatten_event(flatten)
             .with_thread_ids(log_config.thread_id)
             .with_timer(timer)
             .with_writer(writer)
-            .boxed();
-
-        layer
+            .boxed()
     }
 
     /// Build the json layers for the logger
@@ -421,14 +419,12 @@ impl RustLogger {
         for<'a> S: LookupSpan<'a>,
     {
         let timer = RustLogger::get_timer(log_config.time_format.clone());
-        let layer = tracing_subscriber::fmt::layer()
+        tracing_subscriber::fmt::layer()
             .with_target(false)
             .with_thread_ids(log_config.thread_id)
             .with_timer(timer)
             .with_writer(writer)
-            .boxed();
-
-        layer
+            .boxed()
     }
 
     /// Build the layers for the logger
