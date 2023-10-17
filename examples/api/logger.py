@@ -10,5 +10,6 @@ class ApiLogger(Logger):
                 stdout=True,
                 time_format="[year]-[month]-[day]T[hour repr:24]:[minute]:[second]",
                 json_config=JsonConfig(),
+                thread_id=True,
             ),
         )

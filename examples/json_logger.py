@@ -9,7 +9,3 @@ logger = Logger.get_logger(
         file_config=LogFileConfig(filename="logs/test.log"),
     ),
 )
-
-metadata = LogMetadata(data={"key": "value"})
-# log message
-logger.info("test info", metadata=metadata)

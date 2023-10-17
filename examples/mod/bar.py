@@ -1,4 +1,4 @@
-from subclass_logger import JsonLogger
+from custom_logger import JsonLogger
 
 
 logger = JsonLogger.get_logger(__file__)

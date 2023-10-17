@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 from typing import IO
 from pythonjsonlogger.jsonlogger import JsonFormatter
-from rusty_logger import logger, LogLevel, LogConfig, JsonConfig
+from rusty_logger import Logger, LogLevel, LogConfig, JsonConfig
 
 
 import timeit
@@ -58,17 +58,19 @@ class JsonLogger:
         return log
 
 
-logger.config = LogConfig(
-    level=LogLevel.INFO,
-    stdout=True,
-    json_config=JsonConfig(),
-    time_format="[year]-[month]-[day]T[hour repr:24]:[minute]:[second]",
+logger = Logger.get_logger(
+    config=LogConfig(
+        level=LogLevel.INFO,
+        stdout=True,
+        json_config=JsonConfig(),
+        time_format="[year]-[month]-[day]T[hour repr:24]:[minute]:[second]",
+    ),
 )
 py_logger = JsonLogger.get_logger(name=__file__)
 
 
-rust_result = timeit.timeit(stmt='logger.info("test info")', globals=globals(), number=1_000)
-py_result = timeit.timeit(stmt='py_logger.info("test info")', globals=globals(), number=1_000)
+rust_result = timeit.timeit(stmt='logger.info("test info")', globals=globals(), number=10)
+py_result = timeit.timeit(stmt='py_logger.info("test info")', globals=globals(), number=10)
 
 print(f"Rust: {rust_result}")
 print(f"Python: {py_result}")

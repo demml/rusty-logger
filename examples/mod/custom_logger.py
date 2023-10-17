@@ -1,5 +1,5 @@
 from typing import Optional
-from rusty_logger import Logger, LogLevel, LogConfig, JsonConfig
+from rusty_logger import Logger, LogConfig, JsonConfig
 
 
 # Create custom json logger

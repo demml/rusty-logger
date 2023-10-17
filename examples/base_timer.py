@@ -1,4 +1,4 @@
-from rusty_logger import logger, LogLevel, LogConfig, LogFileConfig
+from rusty_logger import Logger, LogLevel, LogConfig, LogFileConfig
 import logging
 import timeit
 import shutil
@@ -14,8 +14,12 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
-logger.config = LogConfig(level=LogLevel.INFO, file_config=LogFileConfig(filename="logs/rust_log.log"))
-
+logger = Logger.get_logger(
+    config=LogConfig(
+        level=LogLevel.INFO,
+        file_config=LogFileConfig(filename="logs/rust_log.log"),
+    )
+)
 
 rust_result = timeit.timeit(stmt='logger.info("test info")', globals=globals(), number=1_000)
 py_result = timeit.timeit(stmt='logging.info("test info")', globals=globals(), number=1_000)

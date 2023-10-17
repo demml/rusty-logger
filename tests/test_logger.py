@@ -109,6 +109,7 @@ def test_error_logger_file():
             json_config=JsonConfig(flatten=True),
             file_config=file_config,
             lock_guard=True,
+            thread_id=True,
         ),
     )
 

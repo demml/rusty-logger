@@ -13,5 +13,5 @@ class HealthCheckResult(BaseModel):
 
 @router.get("/healthcheck", response_model=HealthCheckResult, name="healthcheck")
 def get_healthcheck() -> HealthCheckResult:
-    logger.info("healthcheck")
+    logger.info("healthcheck {}", 1234)
     return HealthCheckResult(is_alive=True)

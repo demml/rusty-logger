@@ -1,4 +1,4 @@
-use crate::logger::rust_logger::{LogConfig, RustLogger};
+use crate::logger::rust_logger::{get_file_name, LogConfig, RustLogger};
 use pyo3::prelude::*;
 use pyo3::types::{PyTuple, PyType};
 use serde_json::{json, to_string_pretty};
@@ -85,7 +85,12 @@ impl PyLogger {
             // get default
             LogConfig::new(None, None, None, None, None, None, None, None, None, None)
         });
-        log_config.name = name;
+
+        // in case where user provides log config and name
+        // check if user provided name in log config first
+        if log_config.name.is_none() {
+            log_config.name = name.map(|val| get_file_name(&val));
+        }
 
         let logger = RustLogger::new(&log_config);
 

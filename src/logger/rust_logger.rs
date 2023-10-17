@@ -184,7 +184,7 @@ impl LogConfig {
 ///
 /// * `name` - The name of the file
 ///
-fn get_file_name(filename: &str) -> String {
+pub fn get_file_name(filename: &str) -> String {
     Path::new(&filename)
         .file_name()
         .and_then(|s| s.to_str())
