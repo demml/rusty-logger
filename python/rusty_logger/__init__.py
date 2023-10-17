@@ -7,7 +7,6 @@ from .version import __version__
 __all__ = [
     "Logger",
     "LogConfig",
-    "LogMetadata",
     "JsonConfig",
     "LogLevel",
     "LogFileConfig",
