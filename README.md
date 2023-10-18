@@ -1,6 +1,6 @@
 
 <p align="center">
-  <a href="https://fastapi.tiangolo.com"><img src="https://github.com/thorrester/rusty-logger/blob/main/img/rusty-logger-logo.png?raw=true"  width="767" height="159" alt="rusty logger logo"/></a>
+<img src="https://github.com/thorrester/rusty-logger/blob/main/img/rusty-logger-logo.png?raw=true"  width="767" height="159" alt="rusty logger logo"/></a>
 </p>
 
 
