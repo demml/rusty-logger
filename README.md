@@ -31,6 +31,7 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 | `level`  | Level to log  | `INFO` |
 | `app_env`  | Application environment (APP_ENV env var)  | `development` |
 | `lock_guard`  | Whether to lock logger to current context  | `False` |
+| `thread_id`  | Whether to display the thread id  | `False` |
 | `time_format` | Custom time format for logger | `[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]` |
 | `json_config`  | `JsonConig`  | `None` |
 | `json_config.flatten`  | Whether to flatten any passed fields  | `True` |
@@ -42,19 +43,15 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 
 Time is currently limited to UTC; however, you can customize time format to your liking using the `time_format` arg. Please refer to (time docs)[https://time-rs.github.io/book/api/format-description.html] for formatting guidelines. In addition, because `Rusty-Logger` calls `Rust` directly, it's not currently possible to pull the specific line number where logging takes place unless python is directly used (if you're even interested in this feature :smile:). If you'd like to see this feature implemented, and you want to contribute, please refer to the [contributing](https://github.com/thorrester/rusty-logger/blob/main/CONTRIBUTING.md) guide.
 
-In addition, `Rusty-Logger` is a *mostly* drop-in replacement, meaning that in many workflows it'll work out of the box with no code change needed. However, in cases of `lazy` logging through additional `args`, `args` are expected to already be formatted as a `str` and will not be formatted by `Rusty-Logger` as the `rust` logic expects a `Vec<&str>` for args. For example, the following will not work:
+In addition, `Rusty-Logger` is a *mostly* drop-in replacement, meaning that you may need to make some minor changes to your existing code. For example, `Rusty-Logger` does not support current python lazy formatting (e.g. `logger.info("Number: %s", 10)`). Instead, `Rusty-Logger` uses Rust's default bracket ({}) formatting.
 
 ```python
-# This will fail
+# This is not supported
 logger.info("Number: %s", 10)
 
-# This will not fail
-logger.info("Number: %s", str(10))
+# This is supported
+logger.info("Number: {}", 10)
 ```
-
-## Additional Metadata
-
-You may also pass additional metadata along with any logging messages via the `LogMetadata` class, which takes a `Dict[str, str]` as an argument. 
 
 ## Show Me The Code!
 
@@ -64,12 +61,13 @@ You may also pass additional metadata along with any logging messages via the `L
 from rusty_logger import Logger
 
 logger = Logger.get_logger(__file__)
-logger.info("his palms are sweaty")
+logger.info("Loggy McLogface")
+```
 ```
 
 output
 ```shell
-2023-09-15T20:16:31.985449Z  INFO his palms are sweaty app_env="development" name="your_file.py"
+2023-10-18T00:11:43::3194  INFO Loggy McLogface app_env="development" name="your_file.py"
 ``` 
 
 ### JSON
@@ -78,12 +76,12 @@ output
 from rusty_logger import Logger, LogConfig, JsonConfig
 
 logger = Logger.get_logger(__file__, LogConfig(json_config=JsonConfig()))
-logger.info("knees weak")
+logger.info("Loggy McLogface logs")
 ```
 
 output
 ```shell
-{"timestamp":"2023-09-15T20:19:52.182299Z","level":"INFO","message":"knees weak","app_env":"development","name":"your_file.py"}
+{"timestamp":"2023-10-18T00:10:59::9732","level":"INFO","message":"Loggy McLogface logs","app_env":"development","name":"your_file.py"}
 ```
 
 ### Log to file
@@ -100,28 +98,15 @@ logger = Logger.get_logger(
         file_config=LogFileConfig(filename="logs/test.log"),
     ),
 )
-logger.warning("arms are heavy")
+logger.warning("Loggy McLogface logs logs")
 ```
 
 output from `log/test.log`
 ```shell
-{"timestamp":"2023-09-15T20:23:37.461645Z","level":"WARN","message":"arms are heavy","app_env":"development","name":"your_file.py"}
+{"timestamp":"2023-10-18T00:10:10::9364","level":"WARN","message":"Loggy McLogface logs logs","app_env":"development","name":"your_file.py"}
+
 ```
 
-### Adding some metadata
-
-```python
-from rusty_logger import Logger, LogConfig, JsonConfig, LogMetadata
-
-logger = Logger.get_logger(__file__, LogConfig(json_config=JsonConfig()))
-metadata = LogMetadata(data={"there's": "vomit"})
-logger.info("on his sweater already", metadata=metadata)
-```
-
-output
-```shell
-{"timestamp":"2023-09-15T20:27:29.013887Z","level":"INFO","message":"on his sweater already","app_env":"development","name":"your_file.py","info":"{\"there's\": \"vomit\"}"}
-```
 
 ### Record multiple places at once
 
@@ -137,12 +122,12 @@ logger = Logger.get_logger(
         file_config=LogFileConfig(filename="logs/test.log")
     ),
 )
-logger.error("MOM'S SPAGHETTI!")
+logger.error("Loggy McLogface logs logs that are logs")
 ```
 
 output
 ```shell
-{"timestamp":"2023-09-15T20:32:23.417027Z","level":"ERROR","message":"MOM'S SPAGHETTI!","app_env":"development","name":"your_file.py"}
+{"timestamp":"2023-10-18T00:09:32::4053","level":"ERROR","message":"Loggy McLogface logs logs that are logs","app_env":"development","name":"your_file.py"}
 ```
 ## Additional examples
 

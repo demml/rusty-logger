@@ -1,9 +1,4 @@
-from rusty_logger import PyLogger, LogConfig
+from rusty_logger import Logger
 
-
-logger = PyLogger.get_logger(
-    name=__file__,
-    config=LogConfig(lock_guard=True),
-)
-
-logger.info("test info")
+logger = Logger.get_logger(__file__)
+logger.info("Loggy McLogface")
