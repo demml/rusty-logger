@@ -3,7 +3,6 @@ import logging
 import timeit
 import shutil
 import pathlib
-import sys
 
 pathlib.Path.mkdir(pathlib.Path("logs"), exist_ok=True)
 
@@ -16,10 +15,11 @@ logging.basicConfig(
 )
 
 logger = Logger.get_logger(
-    name=__file__,
-    config=LogConfig(level=LogLevel.INFO, file_config=LogFileConfig(filename="logs/rust_log.log")),
+    config=LogConfig(
+        level=LogLevel.INFO,
+        file_config=LogFileConfig(filename="logs/rust_log.log"),
+    )
 )
-
 
 rust_result = timeit.timeit(stmt='logger.info("test info")', globals=globals(), number=1_000)
 py_result = timeit.timeit(stmt='logging.info("test info")', globals=globals(), number=1_000)

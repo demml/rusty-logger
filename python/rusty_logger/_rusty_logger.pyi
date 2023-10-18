@@ -1,27 +1,27 @@
-from typing import Optional, Dict
+from typing import Optional
 
 class LogLevel:
-    """Enum for log levels."""
+    """Enum for log levels"""
 
     @property
     def INFO(self) -> str:
-        """The INFO log level."""
+        """The INFO log level"""
         ...
     @property
     def DEBUG(self) -> str:
-        """The DEBUG log level."""
+        """The DEBUG log level"""
         ...
     @property
     def WARN(self) -> str:
-        """The WARNING log level."""
+        """The WARNING log level"""
         ...
     @property
     def ERROR(self) -> str:
-        """The ERROR log level."""
+        """The ERROR log level"""
         ...
     @property
     def TRACE(self) -> str:
-        """The TRACE log level."""
+        """The TRACE log level"""
         ...
 
 class JsonConfig:
@@ -33,12 +33,12 @@ class JsonConfig:
 
         Args:
             flatten:
-                Whether to flatten the any fields that are passed.
+                Whether to flatten the any fields that are passed
         """
         ...
     @property
     def flatten(self) -> bool:
-        """Whether to flatten any fields that are passed."""
+        """Whether to flatten any fields that are passed"""
         ...
 
 class LogFileConfig:
@@ -47,9 +47,9 @@ class LogFileConfig:
 
         Args:
             filename:
-                The name of the file to write logs to.
+                The name of the file to write logs to
             rotate:
-                The rotation policy for the log file. Can be "never", "daily", "hourly", or "minutely".
+                The rotation policy for the log file. Can be "never", "daily", "hourly", or "minutely"
         """
         ...
 
@@ -59,10 +59,11 @@ class LogConfig:
         stdout: bool = True,
         stderr: bool = False,
         level: str = "INFO",
-        show_name: bool = True,
+        name: Optional[str] = None,
         app_env: str = "development",
         time_format: str = "[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]",
         lock_guard: bool = False,
+        thread_id: bool = False,
         json_config: Optional[JsonConfig] = None,
         file_config: Optional[LogFileConfig] = None,
     ):
@@ -70,26 +71,28 @@ class LogConfig:
 
         Args:
             stdout:
-                Whether to log to stdout.
+                Whether to log to stdout
             stderr:
-                Whether to log to stderr.
+                Whether to log to stderr
             filename:
                 Optional name of log file to write to. Can be a path (logs/test.log)
-                or just a name (test.log).
+                or just a name (test.log)
             level:
-                The level to log at.
+                The level to log at
             app_env:
                 The environment name to associate with logs. Defaults to "development"
-            show_name:
-                Whether to show the name given to the logger in the logs.
+            name:
+                Name to record when logging events. Usually this is the name of the module that is using the logger
             time_format:
-                The time format to use for logs.
-            json_config:
-                Optional json logger configuration.
-            file_config:
-                Optional file logger configuration.
+                The time format to use for logs
             lock_guard:
-                Boolean indicating whether to lock this logger to current context. Usually this will be false.
+                Boolean indicating whether to lock this logger to current context. Usually this will be false
+            thread_id:
+                Whether to record the thread id in logs
+            json_config:
+                Optional json logger configuration
+            file_config:
+                Optional file logger configuration
         """
         ...
     @property
@@ -107,15 +110,15 @@ class LogConfig:
         ...
     @property
     def level(self) -> str:
-        """The level to log at."""
+        """The level to log at"""
         ...
     @property
     def app_env(self) -> Optional[str]:
         """The environment name to associate with logs. Defaults to "development"""
         ...
     @property
-    def show_name(self) -> bool:
-        """Whether to show the name given to the logger in the logs."""
+    def name(self) -> bool:
+        """Name to record when logging events. Usually this is the name of the module that is using the logger"""
         ...
     @property
     def time_format(self) -> Optional[str]:
@@ -129,43 +132,25 @@ class LogConfig:
     def lock_guard(self) -> bool:
         """Boolean indicating whether to lock this logger to current context"""
         ...
-
-class LogMetadata:
-    def __init__(self, data: Dict[str, str]):
-        """Creates logger metadata
-
-        Args:
-            data:
-                The metadata to associate with logs.
-        """
-        ...
     @property
-    def data(self) -> Dict[str, str]:
-        """The metadata to associate with logs."""
+    def thread_id(self) -> bool:
+        """Whether to record the thread id in logs"""
         ...
 
 class Logger:
     @classmethod
-    def get_logger(
-        cls,
-        name: str,
-        config: Optional[LogConfig] = None,
-    ) -> "Logger":
-        """Gets a logger with the given name. If output is None, the logger will log to stdout.
+    def get_logger(self, name: Optional[str] = None, config: Optional[LogConfig] = None) -> Logger:
+        """Gets a new logger.
 
         Args:
             name:
-                The name of the logger. Usually this is the name of the module that is using the logger.
+                Name to record with logger. Usually this is the name of the module that is using the logger
             config:
-                The configuration for the logger.
+                The configuration for the logger
 
         Returns:
-            A `JsonLogger` instance.
+            `RustyLogger`
         """
-        ...
-    @property
-    def config(self) -> LogConfig:
-        """The configuration for the logger."""
         ...
     def set_level(self, level: str) -> None:
         """Sets the log level of the logger.
@@ -175,53 +160,57 @@ class Logger:
                 The level to log at.
         """
         ...
-    def info(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
+    @property
+    def config(self) -> LogConfig:
+        """The configuration for the logger."""
+        ...
+    def info(self, message: str, *args) -> None:
         """Logs a message at the INFO level.
 
         Args:
             message:
-                The message to log.
-            metadata:
-                Optional metadata to associate with the log.
+                The message to log
+            args:
+                Args to format the message with
         """
         ...
-    def debug(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
+    def debug(self, message: str, *args) -> None:
         """Logs a message at the DEBUG level.
 
         Args:
             message:
-                The message to log.
-            metadata:
-                Optional metadata to associate with the log.
+                The message to log
+            args:
+                Args to format the message with
         """
         ...
-    def warning(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
+    def warning(self, message: str, *args) -> None:
         """Logs a message at the WARNING level.
 
         Args:
             message:
-                The message to log.
-            metadata:
-                Optional metadata to associate with the log.
+                The message to log
+            args:
+                Args to format the message with
         """
         ...
-    def error(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
+    def error(self, message: str, *args) -> None:
         """Logs a message at the ERROR level.
 
         Args:
             message:
-                The message to log.
-            metadata:
-                Optional metadata to associate with the log.
+                The message to log
+            args:
+                Args to format the message with
         """
         ...
-    def trace(self, message: str, metadata: Optional[LogMetadata] = None, *args) -> None:
+    def trace(self, message: str, *args) -> None:
         """Logs a message at the TRACE level.
 
         Args:
             message:
-                The message to log.
-            metadata:
-                Optional metadata to associate with the log.
+                The message to log
+            args:
+                Args to format the message with
         """
         ...

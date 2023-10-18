@@ -1,7 +1,6 @@
 import glob
-from rusty_logger import Logger, LogConfig, LogMetadata, JsonConfig, LogLevel, LogFileConfig, __version__
+from rusty_logger import LogConfig, JsonConfig, LogLevel, LogFileConfig, __version__, Logger
 import shutil
-import json
 
 """All tests are performed with guard locking
 Guard locking is a feature that allows you to lock a logger to a specific context that is dropped on end of context.
@@ -22,7 +21,6 @@ def test_log_config():
     assert config.stderr is False
     assert config.level == "INFO"
     assert config.app_env == "development"
-    assert config.target is False
     assert config.json_config is None
 
 
@@ -51,9 +49,9 @@ def test_debug_logger_file():
     logger = Logger.get_logger(
         name=__file__,
         config=LogConfig(
-            level="DEBUG",
-            file_config=file_config,
             lock_guard=True,
+            file_config=file_config,
+            level="DEBUG",
         ),
     )
 
@@ -84,6 +82,7 @@ def test_warn_logger_file():
             lock_guard=True,
         ),
     )
+
     logger.info("test info")
     logger.debug("test debug")
     logger.warning("test warning")
@@ -104,13 +103,16 @@ def test_warn_logger_file():
 def test_error_logger_file():
     file_config = LogFileConfig(filename="log/test.log")
     logger = Logger.get_logger(
-        name=__file__,
+        name=__name__,
         config=LogConfig(
             level="ERROR",
+            json_config=JsonConfig(flatten=True),
             file_config=file_config,
             lock_guard=True,
+            thread_id=True,
         ),
     )
+
     logger.info("test info")
     logger.debug("test debug")
     logger.warning("test warning")
@@ -144,37 +146,9 @@ def test_modules():
     shutil.rmtree("log", ignore_errors=False)
 
 
-def test_metadata():
-    file_config = LogFileConfig(filename="log/test.log")
-    logger = Logger.get_logger(
-        name=__file__,
-        config=LogConfig(
-            level="INFO",
-            json_config=JsonConfig(),
-            file_config=file_config,
-            show_name=False,
-            lock_guard=True,
-        ),
-    )
-
-    logger.info("test info", metadata=LogMetadata(data={"test": "info"}))
-
-    for name in glob.glob(f"log/test.log*"):
-        with open(name, "r") as fp:
-            json_list = list(fp)
-
-        for json_str in json_list:
-            result = json.loads(json_str)
-            result = json.loads(result["metadata"])
-            assert result.get("name") is None
-
-        assert "test" in result
-        shutil.rmtree("log", ignore_errors=False)
-
-
 def test_invalid_config_format():
     logger = Logger.get_logger(
-        __file__,
+        name=__file__,
         config=LogConfig(
             stderr=False,
             stdout=False,
@@ -183,17 +157,18 @@ def test_invalid_config_format():
         ),
     )
 
+    # Logger will default to stdout true if not set
     assert logger.config.stdout == True
     logger.info("blah")
 
 
 def test_info_logger_stdout_args():
-    # turn of guard locking for last test
-    logger = Logger.get_logger(name=__file__)
-    logger.info(
-        "test info %s, %d, %s",
-        "arg1",
-        "arg2",
-        "100.12",
-        metadata=LogMetadata(data={"test": "info"}),
+    # turn off guard locking for last test
+    logger = Logger.get_logger(
+        name=__file__,
+        config=LogConfig(
+            lock_guard=True,
+        ),
     )
+
+    logger.info("test info {} {} {} ", "test", 10.43, {"test": "test"})
