@@ -131,4 +131,37 @@ jobs:
       
       - name: Run tests and report coverage
         run: make test.unit
+
+  test-build:
+    needs: [test-os]
+    name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [x86_64, x86]
+        manylinux: [auto]
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
+
+      - name: build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux }}
+          args: --release --out dist --interpreter 3.11
+          rust-toolchain: stable
+          docker-options: -e CI
+
+      - run: ls -lh dist/
+
+      - run: twine check --strict dist/*
     
