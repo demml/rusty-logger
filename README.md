@@ -11,7 +11,6 @@
 
 Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin python wrapper for `Rust's` `tracing` library that provides a *mostly* drop-in replacement for `pythons` default logging.
 
-
 ## Table of contents
 
 - [Supported configuration](#supported-configuration)
@@ -62,7 +61,6 @@ from rusty_logger import Logger
 
 logger = Logger.get_logger(__file__)
 logger.info("Loggy McLogface")
-```
 ```
 
 output
