@@ -63,29 +63,6 @@ pub fn parse_args(args: &PyTuple) -> Option<Vec<String>> {
     args
 }
 
-pub fn parse_color(kwargs: Option<HashMap<&str, &str>>, message: &str) -> String {
-    if kwargs.is_some() {
-        let kwargs = kwargs.unwrap();
-        let color = kwargs.get("color").expect("No color provided");
-
-        let ansi_color = match *color {
-            "red" => AnsiColors::Red,
-            "green" => AnsiColors::Green,
-            "yellow" => AnsiColors::Yellow,
-            "blue" => AnsiColors::Blue,
-            "magenta" => AnsiColors::Magenta,
-            "cyan" => AnsiColors::Cyan,
-            "white" => AnsiColors::White,
-            "black" => AnsiColors::Black,
-            _ => AnsiColors::Black,
-        };
-
-        message.color(ansi_color).to_string()
-    } else {
-        message.to_string()
-    }
-}
-
 #[pyclass(name = "Logger", subclass)]
 pub struct PyLogger {
     logger: RustLogger,
@@ -136,16 +113,44 @@ impl PyLogger {
         self.logger.reload_level(&config.level).unwrap()
     }
 
+    fn check_format_kwargs(&self, message: &str, kwargs: Option<HashMap<&str, &str>>) -> String {
+        if self.config.file_config.is_some() {
+            return message.to_string();
+        };
+
+        if kwargs.is_some() {
+            let kwargs = kwargs.unwrap();
+            let color = kwargs.get("color").expect("No color provided");
+
+            let ansi_color = match *color {
+                "red" => AnsiColors::Red,
+                "green" => AnsiColors::Green,
+                "yellow" => AnsiColors::Yellow,
+                "blue" => AnsiColors::Blue,
+                "magenta" => AnsiColors::Magenta,
+                "cyan" => AnsiColors::Cyan,
+                "white" => AnsiColors::White,
+                "black" => AnsiColors::Black,
+                _ => AnsiColors::Black,
+            };
+
+            message.color(ansi_color).to_string()
+        } else {
+            message.to_string()
+        }
+    }
+
     /// Log at INFO level
     ///
     /// # Arguments
     /// * `message` - The message to log
     /// * `args` - The arguments to log
+    /// * `kwargs` - Optional formatting kwargs
     ///
     #[pyo3(signature = (message, *args, **kwargs))]
     pub fn info(&self, message: &str, args: &PyTuple, kwargs: Option<HashMap<&str, &str>>) {
         let args = parse_args(args);
-        let message = parse_color(kwargs, message);
+        let message = self.check_format_kwargs(message, kwargs);
         self.logger.info(&message, args, &self.config);
     }
 
@@ -154,11 +159,12 @@ impl PyLogger {
     /// # Arguments
     /// * `message` - The message to log
     /// * `args` - The arguments to log
+    /// * `kwargs` - Optional formatting kwargs
     ///
-    #[pyo3(signature = (message, *args))]
+    #[pyo3(signature = (message, *args, **kwargs))]
     pub fn debug(&self, message: &str, args: &PyTuple, kwargs: Option<HashMap<&str, &str>>) {
         let args = parse_args(args);
-        let message = parse_color(kwargs, message);
+        let message = self.check_format_kwargs(message, kwargs);
         self.logger.debug(&message, args, &self.config);
     }
 
@@ -167,11 +173,13 @@ impl PyLogger {
     /// # Arguments
     /// * `message` - The message to log
     /// * `args` - The arguments to log
+    /// * `kwargs` - Optional formatting kwargs
     ///
-    #[pyo3(signature = (message, *args))]
+    #[pyo3(signature = (message, *args, **kwargs))]
     pub fn warning(&self, message: &str, args: &PyTuple, kwargs: Option<HashMap<&str, &str>>) {
         let args = parse_args(args);
-        self.logger.warning(message, args, &self.config);
+        let message = self.check_format_kwargs(message, kwargs);
+        self.logger.warning(&message, args, &self.config);
     }
 
     /// Log at ERROR level
@@ -179,12 +187,13 @@ impl PyLogger {
     /// # Arguments
     /// * `message` - The message to log
     /// * `args` - The arguments to log
-    /// * `metadata` - The metadata to log
+    /// * `kwargs` - Optional formatting kwargs
     ///
-    #[pyo3(signature = (message, *args))]
-    pub fn error(&self, message: &str, args: &PyTuple) {
+    #[pyo3(signature = (message, *args, **kwargs))]
+    pub fn error(&self, message: &str, args: &PyTuple, kwargs: Option<HashMap<&str, &str>>) {
         let args = parse_args(args);
-        self.logger.error(message, args, &self.config);
+        let message = self.check_format_kwargs(message, kwargs);
+        self.logger.error(&message, args, &self.config);
     }
 
     /// Log at TRACE level
@@ -192,12 +201,13 @@ impl PyLogger {
     /// # Arguments
     /// * `message` - The message to log
     /// * `args` - The arguments to log
-    /// * `metadata` - The metadata to log
+    /// * `kwargs` - Optional formatting kwargs
     ///
-    #[pyo3(signature = (message, *args))]
-    pub fn trace(&self, message: &str, args: &PyTuple) {
+    #[pyo3(signature = (message, *args, **kwargs))]
+    pub fn trace(&self, message: &str, args: &PyTuple, kwargs: Option<HashMap<&str, &str>>) {
         let args = parse_args(args);
-        self.logger.trace(message, args, &self.config);
+        let message = self.check_format_kwargs(message, kwargs);
+        self.logger.trace(&message, args, &self.config);
     }
 
     /// String magic method for PyLogger class

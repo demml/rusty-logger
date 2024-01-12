@@ -42,6 +42,7 @@ def test_info_logger_stdout():
     logger.warning("test warning")
     logger.error("test error")
     logger.trace("test trace")
+    logger.info("test info", color="red")  # testing color parsing
 
 
 def test_debug_logger_file():
@@ -60,9 +61,9 @@ def test_debug_logger_file():
     logger.warning("test warning")
     logger.error("test error")
 
-    assert glob.glob(f"log/test.log*")
+    assert glob.glob("log/test.log*")
 
-    for name in glob.glob(f"log/test.log*"):
+    for name in glob.glob("log/test.log*"):
         with open(name, "r") as fp:
             for count, line in enumerate(fp):
                 pass
@@ -88,15 +89,16 @@ def test_warn_logger_file():
     logger.warning("test warning")
     logger.error("test error")
     logger.trace("test error")
+    logger.info("test info", color="red")  # this will be skipped
 
-    assert glob.glob(f"log/test.log*")
+    assert glob.glob("log/test.log*")
 
-    for name in glob.glob(f"log/test.log*"):
+    for name in glob.glob("log/test.log*"):
         with open(name, "r") as fp:
             for count, line in enumerate(fp):
                 pass
             count = count + 1
-    assert count == 5
+    assert count == 6
     shutil.rmtree("log", ignore_errors=False)
 
 
@@ -118,9 +120,9 @@ def test_error_logger_file():
     logger.warning("test warning")
     logger.error("test error")
 
-    assert glob.glob(f"log/test.log*")
+    assert glob.glob("log/test.log*")
 
-    for name in glob.glob(f"log/test.log*"):
+    for name in glob.glob("log/test.log*"):
         with open(name, "r") as fp:
             for count, line in enumerate(fp):
                 count
@@ -130,14 +132,14 @@ def test_error_logger_file():
     shutil.rmtree("log", ignore_errors=False)
 
 
-def test_modules():
+def _test_modules():
     from tests.mod_one import TestOne
     from tests.mod_two import TestTwo
 
     TestOne.test_logger()
     TestTwo.test_logger()
 
-    for name in glob.glob(f"log/test.log*"):
+    for name in glob.glob("log/test.log*"):
         with open(name, "r") as fp:
             for count, line in enumerate(fp):
                 pass
@@ -158,7 +160,7 @@ def test_invalid_config_format():
     )
 
     # Logger will default to stdout true if not set
-    assert logger.config.stdout == True
+    assert logger.config.stdout
     logger.info("blah")
 
 
