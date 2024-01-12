@@ -1,4 +1,6 @@
 use crate::logger::rust_logger::{get_file_name, LogConfig, RustLogger};
+use owo_colors::AnsiColors;
+use owo_colors::OwoColorize;
 use pyo3::prelude::*;
 use pyo3::types::{PyTuple, PyType};
 use serde_json::{json, to_string_pretty};
@@ -61,6 +63,29 @@ pub fn parse_args(args: &PyTuple) -> Option<Vec<String>> {
     args
 }
 
+pub fn parse_color(kwargs: Option<HashMap<&str, &str>>, message: &str) -> String {
+    if kwargs.is_some() {
+        let kwargs = kwargs.unwrap();
+        let color = kwargs.get("color").expect("No color provided");
+
+        let ansi_color = match *color {
+            "red" => AnsiColors::Red,
+            "green" => AnsiColors::Green,
+            "yellow" => AnsiColors::Yellow,
+            "blue" => AnsiColors::Blue,
+            "magenta" => AnsiColors::Magenta,
+            "cyan" => AnsiColors::Cyan,
+            "white" => AnsiColors::White,
+            "black" => AnsiColors::Black,
+            _ => AnsiColors::Black,
+        };
+
+        message.color(ansi_color).to_string()
+    } else {
+        message.to_string()
+    }
+}
+
 #[pyclass(name = "Logger", subclass)]
 pub struct PyLogger {
     logger: RustLogger,
@@ -120,7 +145,8 @@ impl PyLogger {
     #[pyo3(signature = (message, *args, **kwargs))]
     pub fn info(&self, message: &str, args: &PyTuple, kwargs: Option<HashMap<&str, &str>>) {
         let args = parse_args(args);
-        self.logger.info(message, args, &self.config);
+        let message = parse_color(kwargs, message);
+        self.logger.info(&message, args, &self.config);
     }
 
     /// Log at DEBUG level
@@ -130,9 +156,10 @@ impl PyLogger {
     /// * `args` - The arguments to log
     ///
     #[pyo3(signature = (message, *args))]
-    pub fn debug(&self, message: &str, args: &PyTuple) {
+    pub fn debug(&self, message: &str, args: &PyTuple, kwargs: Option<HashMap<&str, &str>>) {
         let args = parse_args(args);
-        self.logger.debug(message, args, &self.config);
+        let message = parse_color(kwargs, message);
+        self.logger.debug(&message, args, &self.config);
     }
 
     /// Log at WARN level
@@ -142,7 +169,7 @@ impl PyLogger {
     /// * `args` - The arguments to log
     ///
     #[pyo3(signature = (message, *args))]
-    pub fn warning(&self, message: &str, args: &PyTuple) {
+    pub fn warning(&self, message: &str, args: &PyTuple, kwargs: Option<HashMap<&str, &str>>) {
         let args = parse_args(args);
         self.logger.warning(message, args, &self.config);
     }

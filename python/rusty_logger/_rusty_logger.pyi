@@ -164,7 +164,7 @@ class Logger:
     def config(self) -> LogConfig:
         """The configuration for the logger."""
         ...
-    def info(self, message: str, *args) -> None:
+    def info(self, message: str, *args, **kwargs) -> None:
         """Logs a message at the INFO level.
 
         Args:
@@ -172,6 +172,8 @@ class Logger:
                 The message to log
             args:
                 Args to format the message with
+            kwargs:
+                Kwargs to format the message with
         """
         ...
     def debug(self, message: str, *args) -> None:
