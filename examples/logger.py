@@ -7,15 +7,7 @@ logger = Logger.get_logger(
     config=LogConfig(
         level=LogLevel.INFO,
         thread_id=True,
+        color=True,
     ),
 )
-logger.info("test info")
-
-# Set to ERROR level
-logger.set_level(level=LogLevel.ERROR)
-
-# This should log
-logger.error("test error", color="red")
-
-# This should not log
 logger.info("test info")

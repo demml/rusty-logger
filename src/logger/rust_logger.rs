@@ -314,7 +314,6 @@ impl RustLogger {
             let guard = tracing_subscriber::registry()
                 .with(layers)
                 .with(filter)
-                .with(tracing_subscriber::fmt::layer().with_ansi(log_config.color))
                 .set_default();
 
             Self {
@@ -327,7 +326,6 @@ impl RustLogger {
             let subscriber_result = tracing_subscriber::registry()
                 .with(layers)
                 .with(filter)
-                .with(tracing_subscriber::fmt::layer().with_ansi(log_config.color))
                 .try_init();
 
             match subscriber_result {
@@ -376,6 +374,7 @@ impl RustLogger {
             .with_thread_ids(log_config.thread_id)
             .with_timer(timer)
             .with_writer(writer)
+            .with_ansi(log_config.color)
             .boxed()
     }
 
@@ -431,6 +430,7 @@ impl RustLogger {
             .with_thread_ids(log_config.thread_id)
             .with_timer(timer)
             .with_writer(writer)
+            .with_ansi(log_config.color)
             .boxed()
     }
 
@@ -642,7 +642,7 @@ mod tests {
             )),
             lock_guard: true,
             thread_id: false,
-            color: false,
+            color: true,
         }
     }
 

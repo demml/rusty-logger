@@ -64,6 +64,7 @@ class LogConfig:
         time_format: str = "[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]",
         lock_guard: bool = False,
         thread_id: bool = False,
+        color: bool = False,
         json_config: Optional[JsonConfig] = None,
         file_config: Optional[LogFileConfig] = None,
     ):
@@ -89,6 +90,8 @@ class LogConfig:
                 Boolean indicating whether to lock this logger to current context. Usually this will be false
             thread_id:
                 Whether to record the thread id in logs
+            color:
+                Whether to colorize logs
             json_config:
                 Optional json logger configuration
             file_config:
@@ -135,6 +138,10 @@ class LogConfig:
     @property
     def thread_id(self) -> bool:
         """Whether to record the thread id in logs"""
+        ...
+    @property
+    def color(self) -> bool:
+        """Whether to colorize logs"""
         ...
 
 class Logger:

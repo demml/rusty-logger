@@ -7,7 +7,7 @@ authors = ["Thorrester <48217609+thorrester@users.noreply.github.com>"]
 
 [tool.poetry.dependencies]
 # required dependencies
-python = ">=3.8,<3.12"
+python = ">=3.8,<=3.12"
 smokeshow = "^0.4.0"
 
 

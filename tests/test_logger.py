@@ -53,6 +53,7 @@ def test_debug_logger_file():
             lock_guard=True,
             file_config=file_config,
             level="DEBUG",
+            color=True,
         ),
     )
 

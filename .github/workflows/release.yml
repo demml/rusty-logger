@@ -10,7 +10,7 @@ permissions:
 
 env:
   PACKAGE_NAME: rusty_logger
-  INTERPRETER: '3.8 3.9 3.10 3.11 pypy3.8 pypy3.9 pypy3.10'
+  INTERPRETER: '3.8 3.9 3.10 3.11 3.12 pypy3.8 pypy3.9 pypy3.10 pypy3.11'
   RUSTFLAGS: -C debuginfo=0
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
       matrix:
         os: [ubuntu, macos, windows]
         poetry-version: ["1.5.1"]
-        python-version: ["3.8", "3.9", "3.10","3.11.5"]
+        python-version: ["3.8", "3.9", "3.10","3.11.5", "3.12"]
 
     runs-on: ${{ matrix.os }}-latest
     needs: [rust-lints-test]
@@ -227,13 +227,13 @@ jobs:
         include:
           - target: i686
             python-architecture: x86
-            interpreter: 3.8 3.9 3.10 3.11
+            interpreter: 3.8 3.9 3.10 3.11 3.12
           - target: x64
             python-architecture: x64
-            interpreter: 3.8 3.9 3.10 3.11
+            interpreter: 3.8 3.9 3.10 3.11 3.12
           - target: x86
             python-architecture: x86
-            interpreter: 3.8 3.9 3.10 3.11
+            interpreter: 3.8 3.9 3.10 3.11 3.12
         exclude:
           - target: x86
           - target: x64
