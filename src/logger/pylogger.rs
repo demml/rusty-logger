@@ -85,7 +85,9 @@ impl PyLogger {
     pub fn get_logger(cls: &PyType, name: Option<String>, config: Option<LogConfig>) -> PyLogger {
         let mut log_config = config.unwrap_or_else(|| {
             // get default
-            LogConfig::new(None, None, None, None, None, None, None, None, None, None)
+            LogConfig::new(
+                None, None, None, None, None, None, None, None, None, None, None,
+            )
         });
 
         // in case where user provides log config and name
