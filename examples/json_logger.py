@@ -1,4 +1,4 @@
-from rusty_logger import Logger, LogLevel, LogConfig, JsonConfig, LogMetadata, LogFileConfig
+from rusty_logger import Logger, LogLevel, LogConfig, JsonConfig, LogFileConfig
 
 # This logger will log to stdout at INFO level in json format
 logger = Logger.get_logger(

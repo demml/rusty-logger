@@ -8,12 +8,9 @@ from rusty_logger import Logger, LogLevel, LogConfig, JsonConfig
 
 
 import timeit
-import shutil
-import pathlib
-import sys
+
 
 APP_ENV = os.getenv("APP_ENV", "development")
-pathlib.Path.mkdir(pathlib.Path("logs"), exist_ok=True)
 
 
 class LogFormatter(JsonFormatter):
@@ -75,5 +72,3 @@ py_result = timeit.timeit(stmt='py_logger.info("test info")', globals=globals(),
 print(f"Rust: {rust_result}")
 print(f"Python: {py_result}")
 print(f"Rust logger is {py_result / rust_result} times faster than Python default logger when logging to file")
-
-shutil.rmtree("logs", ignore_errors=True)

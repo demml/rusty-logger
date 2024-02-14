@@ -104,6 +104,9 @@ pub struct LogConfig {
 
     #[pyo3(get, set)]
     pub thread_id: bool,
+
+    #[pyo3(get, set)]
+    pub color: bool,
 }
 
 #[pymethods]
@@ -122,6 +125,7 @@ impl LogConfig {
         file_config: Option<LogFileConfig>,
         lock_guard: Option<bool>,
         thread_id: Option<bool>,
+        color: Option<bool>,
     ) -> Self {
         let log_env = match app_env {
             Some(val) => val,
@@ -161,6 +165,7 @@ impl LogConfig {
             file_config,
             lock_guard: lock_guard.unwrap_or(false),
             thread_id: thread_id.unwrap_or(false),
+            color: color.unwrap_or(false),
         }
     }
 
@@ -369,6 +374,7 @@ impl RustLogger {
             .with_thread_ids(log_config.thread_id)
             .with_timer(timer)
             .with_writer(writer)
+            .with_ansi(log_config.color)
             .boxed()
     }
 
@@ -424,6 +430,7 @@ impl RustLogger {
             .with_thread_ids(log_config.thread_id)
             .with_timer(timer)
             .with_writer(writer)
+            .with_ansi(log_config.color)
             .boxed()
     }
 
@@ -635,6 +642,7 @@ mod tests {
             )),
             lock_guard: true,
             thread_id: false,
+            color: true,
         }
     }
 
@@ -652,6 +660,7 @@ mod tests {
             file_config: None,
             lock_guard: true,
             thread_id: true,
+            color: true,
         }
     }
 
@@ -669,6 +678,7 @@ mod tests {
             file_config: None,
             lock_guard: true,
             thread_id: true,
+            color: true,
         }
     }
 

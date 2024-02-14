@@ -19,7 +19,7 @@ jobs:
   rust-lints-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Rust
         run: rustup override set stable && rustup update
@@ -46,7 +46,7 @@ jobs:
       matrix:
         os: [ubuntu, macos, windows]
         poetry-version: ["1.5.1"]
-        python-version: ["3.8", "3.9", "3.10","3.11.5"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     runs-on: ${{ matrix.os }}-latest
     needs: [rust-lints-test]
@@ -64,7 +64,7 @@ jobs:
           key: ${{ matrix.os }}-${{ matrix.python-version }}-v1
 
       - name: set up python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
@@ -84,7 +84,7 @@ jobs:
         run: make test.unit
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -113,7 +113,7 @@ jobs:
           key: ubuntu-${{ matrix.python-version }}-v1
 
       - name: set up python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
@@ -146,7 +146,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: set up python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 

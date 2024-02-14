@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "rusty-logger"
-version = "0.0.0"
+version = "0.3.0"
 description = "Rust-based python logger"
 readme = "README.md"
 authors = ["Thorrester <48217609+thorrester@users.noreply.github.com>"]
 
 [tool.poetry.dependencies]
 # required dependencies
-python = ">=3.8,<3.12"
+python = ">=3.8,<3.13"
 smokeshow = "^0.4.0"
 
 
@@ -17,7 +17,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
-ruff = "^0.0.242"
+ruff = "^0.1.0"
 mypy = "^1"
 black = "22.3.0"
 pylint = "^2.17.5"
@@ -87,7 +87,7 @@ build-backend = "maturin"
 [project]
 name = "rusty-logger"
 description = 'Super fast logging for python'
-requires-python = ">=3.8, <3.12"
+requires-python = ">=3.8, <3.13"
 authors = [
     {name = 'Steven Forrester', email = 'sjforrester32@gmail.com'}
 ]
@@ -105,6 +105,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
     'Intended Audience :: Developers',
     'Intended Audience :: Information Technology',
