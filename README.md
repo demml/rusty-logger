@@ -31,6 +31,7 @@ Simple, opinionated and blazingly fast python logging. `Rusty-Logger` is a thin 
 | `app_env`  | Application environment (APP_ENV env var)  | `development` |
 | `lock_guard`  | Whether to lock logger to current context  | `False` |
 | `thread_id`  | Whether to display the thread id  | `False` |
+| `color`  | Whether to enable ansi coloring of logs for standard logger  | `False` |
 | `time_format` | Custom time format for logger | `[year]-[month]-[day]T[hour repr:24]:[minute]:[second]::[subsecond digits:4]` |
 | `json_config`  | `JsonConig`  | `None` |
 | `json_config.flatten`  | Whether to flatten any passed fields  | `True` |
@@ -132,7 +133,7 @@ output
 For additional examples, please see the [examples](https://github.com/thorrester/rusty-logger/tree/main/examples) directory which contains timed example of vanilla logger vs `Rusty-Logger`, `python-json-logger` vs `Rusty-Logger` as well as a multi-worker API example.
 
 ## Performance
-Why would we do this when python logging is fine? Because we wanted something faster :smile:. From our own benchmarks, `Rusty-Logger` tends to be ~`1x` faster than vanilla python logging and ~2.5x faster than vanilla `JSON` logging. And while speed may not be mission critical for a few thousands logs, it can be for millions, which many companies deal with on a daily basis. Time is money and compute, and we want to save you both :moneybag: :computer:.
+Why would we do this when python logging is fine? Because we wanted something faster :smile:. From our own benchmarks, `Rusty-Logger` tends to be ~`4x` faster than vanilla python logging and ~8x faster than vanilla `JSON` logging. And while speed may not be mission critical for a few thousands logs, it can be for millions, which many companies deal with on a daily basis. Time is money and compute, and we want to save you both :moneybag: :computer:.
 
 ## Contributing
 While `Rusty-Logger` is production ready out of the box, it is still in it's infancy and is ripe for additional contributions. If you'd like to contribute, please see the [contributing](https://github.com/thorrester/rusty-logger/blob/main/CONTRIBUTING.md) guide.
