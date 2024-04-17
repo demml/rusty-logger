@@ -24,7 +24,7 @@ pylint = "^2.17.5"
 python-json-logger = "^2.0.7"
 fastapi = "^0.109.2"
 uvicorn = "^0.23"
-gunicorn = "^21"
+gunicorn = "^22"
 
 [tool.ruff]
 line-length = 120
