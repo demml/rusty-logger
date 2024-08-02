@@ -263,6 +263,7 @@ fn format_string(message: &str, args: &Vec<String>) -> String {
 /// * `level` - The level of the logger. Either "info", "debug", "warn", or "error"
 /// * `name` - The name of the file
 ///
+#[allow(dead_code)]
 pub struct RustLogger {
     reload_handle: ReloadHandle,
     pub guard: Option<DefaultGuard>,
