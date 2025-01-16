@@ -208,10 +208,10 @@ dependencies = [
 
 [[package]]
 name = "py-rusty-logger"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "pyo3",
- "rusty-logger",
+ "rusty-logging",
 ]
 
 [[package]]
@@ -319,8 +319,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
-name = "rusty-logger"
-version = "0.1.0"
+name = "rusty-logging"
+version = "0.4.0"
 dependencies = [
  "dynfmt",
  "owo-colors",

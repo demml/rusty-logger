@@ -8,5 +8,5 @@ name = "py_rusty_logger"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-rusty-logger = { workspace = true }
+rusty-logging = { workspace = true }
 pyo3 = { workspace = true }

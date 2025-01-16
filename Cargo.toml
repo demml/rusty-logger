@@ -9,14 +9,14 @@ default-members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.4.0"
 authors = ["Steven Forrester <sjforrester32@gmail.com>"]
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/demml/opsml"
 
 [workspace.dependencies]
-rusty-logger = { path = "crates/rusty_logger" }
+rusty-logging = { path = "crates/rusty_logger" }
 dynfmt = { version = "0.*", features = ["curly"] }
 owo-colors = "4.*"
 pyo3 = { version = "0.23", features = ["extension-module", "anyhow", "serde", "chrono"] }

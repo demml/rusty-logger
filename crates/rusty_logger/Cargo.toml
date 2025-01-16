@@ -1,5 +1,5 @@
 [package]
-name = "rusty-logger"
+name = "rusty-logging"
 version = { workspace = true }
 edition = { workspace = true }
 repository = { workspace = true }

@@ -1,4 +1,4 @@
-use ::rusty_logger::logger::{LogLevel, LoggingConfig, RustyLogger, WriteLevel};
+use ::rusty_logging::logger::{LogLevel, LoggingConfig, RustyLogger, WriteLevel};
 use pyo3::prelude::*;
 /// Python implementation for the Rusty Logger
 ///
