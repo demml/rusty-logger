@@ -1,0 +1,12 @@
+[package]
+name = "py-rusty-logger"
+version = { workspace = true }
+edition = "2021"
+
+[lib]
+name = "py_rusty_logger"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+rusty-logger = { workspace = true }
+pyo3 = { workspace = true }

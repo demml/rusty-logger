@@ -1,0 +1,22 @@
+[package]
+name = "rusty-logger"
+version = { workspace = true }
+edition = { workspace = true }
+repository = { workspace = true }
+description = "Logging for OpsML"
+
+[lib]
+doctest = false
+
+[dependencies]
+dynfmt = { workspace = true }
+pyo3 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+owo-colors = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+tracing = { workspace = true }
+tracing-appender = { workspace = true }
+tracing-core = { workspace = true }
+tracing-subscriber = { workspace = true }

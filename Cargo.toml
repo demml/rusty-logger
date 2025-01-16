@@ -1,26 +1,41 @@
-[package]
-name = "rusty-logger"
-version = "0.3.2"
+[workspace]
+resolver = "2"
+members = [
+  "crates/*",
+  "py-logger",
+]
+default-members = [
+  "crates/*",
+]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Steven Forrester <sjforrester32@gmail.com>"]
 edition = "2021"
+license = "MIT"
+repository = "https://github.com/demml/opsml"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[lib]
-name = "_rusty_logger"
-crate-type = ["cdylib", "rlib"]
-
-[dependencies]
-pyo3 = "0.19.0"
-tracing = "0.1.37"
-tracing-appender = "0.2.2"
-tracing-subscriber = {version = "0.3.17", features = ["json", "time"]}
-serde = { version = "1.0.163", features = ["derive"] }
-tracing-core = "0.1.31"
-serde_json = "1.0.107"
-time = "0.3.28"
-owo-colors = "4.0.0"
-dynfmt = { version = "0.1.5", features = ["curly"] }
+[workspace.dependencies]
+rusty-logger = { path = "crates/rusty_logger" }
+dynfmt = { version = "0.*", features = ["curly"] }
+owo-colors = "4.*"
+pyo3 = { version = "0.23", features = ["extension-module", "anyhow", "serde", "chrono"] }
+serde = { version = "1.*", features = ["derive"] }
+serde_json = "1.*"
+thiserror = "2.*"
+time = "0.*"
+tracing = "0.*"
+tracing-appender = "0.*"
+tracing-core = "0.*"
+tracing-subscriber = {version = "0.*", features = ["json", "time"]}
 
 [profile.release]
 lto = "fat"
 codegen-units = 1
 strip = true
+opt-level = 3
+
+[profile.release-no-lto]
+inherits = "release"
+lto = false
+
