@@ -5,6 +5,12 @@ edition = { workspace = true }
 repository = { workspace = true }
 description = "Logging for OpsML"
 
+authors = [
+  "Steven Forrester <sjforrester32@gmail.com>"
+]
+
+license = "MIT"
+
 [lib]
 doctest = false
 
