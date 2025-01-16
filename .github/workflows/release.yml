@@ -1,7 +1,6 @@
 name: Release
 
 on:
-
   release:
     types: [published]
 
@@ -10,399 +9,319 @@ permissions:
 
 env:
   PACKAGE_NAME: rusty_logger
-  INTERPRETER: '3.8 3.9 3.10 3.11 3.12 pypy3.8 pypy3.9 pypy3.10'
+  INTERPRETER: "3.10 3.11 3.12 3.13 pypy3.10"
   RUSTFLAGS: -C debuginfo=0
 
 jobs:
-  rust-lints-test:
+  rust-release:
+    environment: crates.io
+    name: Release-Rust
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Rust
-        run: rustup override set stable && rustup update
-
-      - name: Install clippy
-        run: rustup component add clippy
-
-      - name: Cache Rust
-        uses: Swatinem/rust-cache@v2
-        
-      - name: Run cargo clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
-
-      - run: cargo test
-        env:
-          RUST_BACKTRACE: 1
-
-  test-os:
-    name: test ${{ matrix.os }}-${{ matrix.python-version }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu, macos, windows]
-        poetry-version: ["1.5.1"]
-        python-version: ["3.8", "3.9", "3.10","3.11", "3.12"]
-
-    runs-on: ${{ matrix.os }}-latest
-    needs: [rust-lints-test]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry==${{ matrix.poetry-version }}
-
-      - name: install rust stable
-        uses: dtolnay/rust-toolchain@stable
-
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
       - name: cache rust
+        id: cargo_release_cache
         uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.os }}-${{ matrix.python-version }}-v1
-
-      - name: set up python
-        uses: actions/setup-python@v5
+          key: ${{ runner.os }}-cargo-release
+      - name: Switch to main branch
+        run: git checkout main
+      - name: Run release-plz
+        uses: MarcoIeni/release-plz-action@v0.5
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
-
-      - name: Create virtual environment
-        run: |
-          python -m venv .venv
-          echo "$GITHUB_WORKSPACE/rusty-logger/.venv/bin" >> $GITHUB_PATH
-
-      - name: Install dependencies
-        run : make setup.project
-
-      - name: Lints
-        run : make lints.ci
-      
-      - name: Run tests and report coverage
-        run: make test.unit
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
+          command: release
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_REGISTRY_TOKEN }}
+  #est-python:
+  # name: test ${{ matrix.os }}-${{ matrix.python-version }}
 
-  build-sdist:
-    needs: [test-os]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build sdist
-        uses: PyO3/maturin-action@v1
-        with:
-          command: sdist
-          args: --out dist
-          rust-toolchain: stable
+  # strategy:
+  #   fail-fast: false
+  #   matrix:
+  #     os: [ubuntu, macos]
+  #     python-version: ["3.10", "3.11", "3.12"]
 
-      - name: Upload sdist
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: dist
+  # runs-on: ${{ matrix.os }}-latest
+  # steps:
+  #   - uses: actions/checkout@v4
 
-  build-ubuntu:
-    needs: [test-os]
-    name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }}
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [x86_64, x86, aarch64, armv7, s390x, ppc64le]
-        manylinux: [auto]
+  #   - name: install rust stable
+  #     uses: dtolnay/rust-toolchain@stable
 
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  #   - name: cache rust
+  #     uses: Swatinem/rust-cache@v2
+  #     with:
+  #       key: ${{ matrix.os }}-${{ matrix.python-version }}-v1
 
-      - name: set up python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+  #   - name: Install uv
+  #     uses: astral-sh/setup-uv@v4
+  #     with:
+  #       enable-cache: true
 
-      - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
+  #   - name: set up python
+  #     uses: actions/setup-python@v5
+  #     with:
+  #       python-version: ${{ matrix.python-version }}
 
-      - name: build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.target }}
-          manylinux: ${{ matrix.manylinux }}
-          args: --release --out dist --interpreter ${{ env.INTERPRETER }}
-          rust-toolchain: stable
-          docker-options: -e CI
+  #   - name: Create virtual environment
+  #     working-directory: ./py-logger
+  #     run: make setup.project
 
-      - run: ls -lh dist/
+  #   - name: Lints
+  #     working-directory: ./py-logger
+  #     run: make lints.ci
 
-      - run: twine check --strict dist/*
+  #   - name: Run tests and report coverage
+  #     working-directory: ./py-logger
+  #     run: make test.unit
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: pypi_files
-          path: dist
+  #uild-sdist:
+  # needs: [test-python]
+  # runs-on: ubuntu-latest
+  # steps:
+  #   - uses: actions/checkout@v4
+  #   - name: Build sdist
+  #     uses: PyO3/maturin-action@v1
+  #     with:
+  #       command: sdist
+  #       args: --out dist
+  #       rust-toolchain: stable
+  #       working-directory: ./py-logger
 
-  build-ubuntu-musllinux:
-    needs: [test-os]
-    name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }}
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [x86_64, aarch64]
-        manylinux: ["musllinux_1_1"]
+  #   - name: Upload sdist
+  #     uses: actions/upload-artifact@v4
+  #     with:
+  #       name: wheels
+  #       path: ./py-logger/dist
 
+  #uild-ubuntu:
+  # needs: [test-python]
+  # name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }}
+  # strategy:
+  #   fail-fast: false
+  #   matrix:
+  #     target: [x86_64, x86, aarch64, armv7, s390x, ppc64le]
+  #     manylinux: [auto]
 
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  # runs-on: ubuntu-latest
+  # steps:
+  #   - uses: actions/checkout@v4
 
-      - name: set up python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+  #   - name: set up python
+  #     uses: actions/setup-python@v5
+  #     with:
+  #       python-version: "3.12"
 
-      - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
+  #   - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
 
-      - name: build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.target }}
-          manylinux: ${{ matrix.manylinux }}
-          args: --release --out dist --interpreter ${{ env.INTERPRETER }}
-          rust-toolchain: stable
-          docker-options: -e CI
+  #   - name: build wheels
+  #     uses: PyO3/maturin-action@v1
+  #     with:
+  #       target: ${{ matrix.target }}
+  #       manylinux: ${{ matrix.manylinux }}
+  #       args: --release --out dist --interpreter ${{ env.INTERPRETER }}
+  #       rust-toolchain: stable
+  #       docker-options: -e CI
+  #       working-directory: ./py-logger
 
-      - run: ls -lh dist/
+  #   - run: ls -lh dist/
 
-      - run: twine check --strict dist/*
+  #   - run: twine check --strict dist/*
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: pypi_files
-          path: dist
+  #   - uses: actions/upload-artifact@v3
+  #     with:
+  #       name: pypi_files
+  #       path: ./py-logger/dist
 
+  #uild-ubuntu-musllinux:
+  # needs: [test-python]
+  # name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }}
+  # strategy:
+  #   fail-fast: false
+  #   matrix:
+  #     target: [x86_64, aarch64]
+  #     manylinux: ["musllinux_1_1"]
 
-  build-macos:
-    needs: [test-os]
-    name: build - macos - (${{ matrix.target }} - auto
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [x86_64, aarch64]
+  # runs-on: ubuntu-latest
+  # steps:
+  #   - uses: actions/checkout@v4
 
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
+  #   - name: set up python
+  #     uses: actions/setup-python@v5
+  #     with:
+  #       python-version: "3.12"
 
-      - name: set up python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+  #   - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
 
-      - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
+  #   - name: build wheels
+  #     uses: PyO3/maturin-action@v1
+  #     with:
+  #       target: ${{ matrix.target }}
+  #       manylinux: ${{ matrix.manylinux }}
+  #       args: --release --out dist --interpreter ${{ env.INTERPRETER }}
+  #       rust-toolchain: stable
+  #       docker-options: -e CI
+  #       working-directory: ./py-logger
 
-      - name: build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.target }}
-          args: --release --out dist --interpreter ${{ env.INTERPRETER }}
-          rust-toolchain: stable
-          docker-options: -e CI 
+  #   - run: ls -lh dist/
 
-      - run: ls -lh dist/
+  #   - run: twine check --strict dist/*
 
-      - run: twine check --strict dist/*
+  #   - uses: actions/upload-artifact@v3
+  #     with:
+  #       name: pypi_files
+  #       path: ./py-logger/dist
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: pypi_files
-          path: dist
+  #uild-macos:
+  # needs: [test-python]
+  # name: build - macos - (${{ matrix.target }} - auto
+  # strategy:
+  #   fail-fast: false
+  #   matrix:
+  #     target: [x86_64, aarch64]
 
-  build-windows:
-    needs: [test-os]
-    name: build - windows - (${{ matrix.target }} - auto
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [x64, x86]
-        include:
-          - target: i686
-            python-architecture: x86
-            interpreter: 3.8 3.9 3.10 3.11 3.12
-          - target: x64
-            python-architecture: x64
-            interpreter: 3.8 3.9 3.10 3.11 3.12
-          - target: x86
-            python-architecture: x86
-            interpreter: 3.8 3.9 3.10 3.11 3.12
-        exclude:
-          - target: x86
-          - target: x64
+  # runs-on: macos-latest
+  # steps:
+  #   - uses: actions/checkout@v4
 
+  #   - name: set up python
+  #     uses: actions/setup-python@v5
+  #     with:
+  #       python-version: "3.12"
 
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
+  #   - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
 
-      - name: set up python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          architecture: ${{ matrix.python-architecture }}
+  #   - name: build wheels
+  #     uses: PyO3/maturin-action@v1
+  #     with:
+  #       target: ${{ matrix.target }}
+  #       args: --release --out dist --interpreter ${{ env.INTERPRETER }}
+  #       rust-toolchain: stable
+  #       docker-options: -e CI
+  #       working-directory: ./py-logger
 
-      - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
+  #   - run: ls -lh ./py-logger/dist/
 
-      - name: build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.target }}
-          args: --release --out dist --interpreter ${{ matrix.interpreter || env.INTERPRETER }}
-          rust-toolchain: stable
+  #   - run: twine check --strict ./py-logger/dist/*
 
-      - run: dir dist/
+  #   - uses: actions/upload-artifact@v3
+  #     with:
+  #       name: pypi_files
+  #       path: ./py-logger/dist
 
-      - run: twine check --strict dist/*
+  #uild-windows:
+  # needs: [test-python]
+  # name: build - windows - (${{ matrix.target }} - auto
+  # strategy:
+  #   fail-fast: false
+  #   matrix:
+  #     target: [x64, x86]
+  #     include:
+  #       - target: i686
+  #         python-architecture: x86
+  #         interpreter: 3.10 3.11 3.12 3.13
+  #       - target: x64
+  #         python-architecture: x64
+  #         interpreter: 3.10 3.11 3.12 3.13
+  #       - target: x86
+  #         python-architecture: x86
+  #         interpreter: 3.10 3.11 3.12 3.13
+  #     exclude:
+  #       - target: x86
+  #       - target: x64
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: pypi_files
-          path: dist
+  # runs-on: windows-latest
+  # steps:
+  #   - uses: actions/checkout@v4
 
-  inspect-pypi-assets:
-    needs: [build-ubuntu, build-ubuntu-musllinux, build-macos, build-windows, build-sdist]
-    runs-on: ubuntu-latest
+  #   - name: set up python
+  #     uses: actions/setup-python@v5
+  #     with:
+  #       python-version: "3.12"
+  #       architecture: ${{ matrix.python-architecture }}
 
-    steps:
-      - uses: actions/checkout@v4
+  #   - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
 
-      - name: get dist artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: pypi_files
-          path: dist
+  #   - name: build wheels
+  #     uses: PyO3/maturin-action@v1
+  #     with:
+  #       target: ${{ matrix.target }}
+  #       args: --release --out dist --interpreter ${{ matrix.interpreter || env.INTERPRETER }}
+  #       rust-toolchain: stable
+  #       working-directory: ./py-logger
 
-      - name: list dist files
-        run: |
-         ls -lh dist/
-         ls -l dist/
-         echo "`ls dist | wc -l` files"
+  #   - run: dir dist/
 
+  #   - run: twine check --strict ./py-logger/dist/*
 
-  test-builds-arch:
-    name: test build on ${{ matrix.target }}-${{ matrix.distro }}
-    needs: [build-ubuntu, build-ubuntu-musllinux, build-macos, build-windows, build-sdist]
-    runs-on: ubuntu-latest
+  #   - uses: actions/upload-artifact@v3
+  #     with:
+  #       name: pypi_files
+  #       path: ./py-logger/dist
 
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [aarch64, armv7, s390x, ppc64le]
-        distro: ['ubuntu22.04']
-        include:
-          - target: aarch64
-            distro: alpine_latest
+  #nspect-pypi-assets:
+  # needs:
+  #   [
+  #     build-ubuntu,
+  #     build-ubuntu-musllinux,
+  #     build-macos,
+  #     build-windows,
+  #     build-sdist,
+  #   ]
+  # runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+  # steps:
+  #   - uses: actions/checkout@v4
 
-      - name: get dist artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: pypi_files
-          path: dist
+  #   - name: get dist artifacts
+  #     uses: actions/download-artifact@v3
+  #     with:
+  #       name: pypi_files
+  #       path: dist
 
-      - uses: uraimo/run-on-arch-action@v2.5.1
-        name: install & test
-        with:
-          arch: ${{ matrix.target }}
-          distro: ${{ matrix.distro }}
-          githubToken: ${{ github.token }}
-          install: |
-            set -x
-            if command -v apt-get &> /dev/null; then
-              echo "installing python & pip with apt-get..."
-              apt-get update
-              apt-get install -y --no-install-recommends python3 python3-pip python3-venv
-            else
-              echo "installing python & pip with apk..."
-              apk update
-              apk add python3 py3-pip
-            fi
-          run: |
-            set -x
-            python3 -m venv venv
-            source venv/bin/activate
-            python3 -m pip install -r tests/requirements.txt
-            python3 -m pip install rusty_logger --no-index --no-deps --find-links dist --force-reinstall
-            python3 -m pytest
-            python3 -c 'import rusty_logger; print(rusty_logger.__version__)'
+  #   - name: list dist files
+  #     run: |
+  #       ls -lh dist/
+  #       ls -l dist/
+  #       echo "`ls dist | wc -l` files"
 
-  test-builds-os:
-    name: test build on ${{ matrix.os }}
-    needs: [build-ubuntu, build-ubuntu-musllinux, build-macos, build-windows, build-sdist]
+  #elease:
+  # name: Release
+  # runs-on: ubuntu-latest
+  # needs: [inspect-pypi-assets]
 
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu, macos, windows]
+  # steps:
+  #   - uses: actions/checkout@v4
 
-    runs-on: ${{ matrix.os }}-latest
-    steps:
-      - uses: actions/checkout@v4
+  #   - name: install rust stable
+  #     uses: dtolnay/rust-toolchain@stable
+  #   - run: |
+  #       export VERSION=$(cargo pkgid | cut -d "#" -f2)
+  #       echo "version: $VERSION"
+  #       echo "tag: $GITHUB_REF_NAME"
+  #       test "v$VERSION" "=" "$GITHUB_REF_NAME"
 
-      - name: set up python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+  #   - name: set up python
+  #     uses: actions/setup-python@v5
+  #     with:
+  #       python-version: "3.10"
 
-      - name: Create virtual environment
-        run: |
-          python -m venv .venv
-          echo "$GITHUB_WORKSPACE/rusty-logger/.venv/bin" >> $GITHUB_PATH
+  #   - run: pip install -U twine
 
-      - name: get dist artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: pypi_files
-          path: dist
+  #   - name: get dist artifacts
+  #     uses: actions/download-artifact@v3
+  #     with:
+  #       name: pypi_files
+  #       path: dist
 
-      - run: pip install -r tests/requirements.txt
-      - run: pip install rusty_logger --no-index --no-deps --find-links dist --force-reinstall
-      - run: pytest
+  #   - run: twine check --strict dist/*
 
-
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    needs: [test-builds-os, test-builds-arch]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: install rust stable
-        uses: dtolnay/rust-toolchain@stable
-      - run: |
-          export VERSION=$(cargo pkgid | cut -d "#" -f2)
-          echo "version: $VERSION"
-          echo "tag: $GITHUB_REF_NAME"
-          test "v$VERSION" "=" "$GITHUB_REF_NAME"
-
-      - name: set up python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - run: pip install -U twine
-
-      - name: get dist artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: pypi_files
-          path: dist
-
-      - run: twine check --strict dist/*
-
-      - name: upload to pypi
-        run: twine upload dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+  #   - name: upload to pypi
+  #     run: twine upload dist/*
+  #     env:
+  #       TWINE_USERNAME: __token__
+  #       TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
