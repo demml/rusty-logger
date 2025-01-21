@@ -126,7 +126,7 @@ pub fn setup_logging(config: &LoggingConfig) -> Result<(), LoggingError> {
 }
 
 #[pyclass]
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 pub struct LoggingConfig {
     #[pyo3(get, set)]
     show_threads: bool,
@@ -152,15 +152,32 @@ impl LoggingConfig {
         use_json: Option<bool>,
     ) -> Self {
         let show_threads = show_threads.unwrap_or(true);
-        let log_level = log_level.unwrap_or(LogLevel::Info);
+
         let write_level = write_level.unwrap_or(WriteLevel::Stdout);
         let use_json = use_json.unwrap_or(false);
+
+        let log_level = std::env::var("LOG_LEVEL").map_or_else(
+            |_| log_level.unwrap_or(LogLevel::Info),
+            |x| LogLevel::from_str(&x).unwrap_or(LogLevel::Info),
+        );
+
         LoggingConfig {
             show_threads,
             log_level,
             write_level,
             use_json,
         }
+    }
+
+    #[staticmethod]
+    pub fn default_json() -> Self {
+        LoggingConfig::new(Some(true), None, None, Some(true))
+    }
+}
+
+impl Default for LoggingConfig {
+    fn default() -> Self {
+        LoggingConfig::new(Some(true), None, None, None)
     }
 }
 
