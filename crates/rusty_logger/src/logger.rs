@@ -75,7 +75,7 @@ fn build_json_subscriber(
         .json()
         .with_target(false)
         .flatten_event(true)
-        .with_thread_ids(config.show_threads.clone())
+        .with_thread_ids(config.show_threads)
         .with_timer(config.time_format()?);
 
     if config.write_level == WriteLevel::Stderror {
@@ -94,7 +94,7 @@ fn build_subscriber(log_level: tracing::Level, config: &LoggingConfig) -> Result
     let sub = tracing_subscriber::fmt()
         .with_max_level(log_level)
         .with_target(false)
-        .with_thread_ids(config.show_threads.clone())
+        .with_thread_ids(config.show_threads)
         .with_timer(config.time_format()?);
 
     if config.write_level == WriteLevel::Stderror {
@@ -119,14 +119,14 @@ pub fn setup_logging(config: &LoggingConfig) -> Result<(), LoggingError> {
     };
 
     if config.use_json {
-        return build_json_subscriber(display_level, config);
+        build_json_subscriber(display_level, config)
     } else {
-        return build_subscriber(display_level, config);
+        build_subscriber(display_level, config)
     }
 }
 
 #[pyclass]
-#[derive(Clone, Default, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct LoggingConfig {
     #[pyo3(get, set)]
     show_threads: bool,
@@ -170,13 +170,13 @@ impl LoggingConfig {
     }
 
     #[staticmethod]
-    pub fn default_json() -> Self {
+    pub fn json_default() -> Self {
         LoggingConfig::new(Some(true), None, None, Some(true))
     }
-}
 
-impl Default for LoggingConfig {
-    fn default() -> Self {
+    #[staticmethod]
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> Self {
         LoggingConfig::new(Some(true), None, None, None)
     }
 }

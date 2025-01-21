@@ -37,6 +37,34 @@ class LoggingConfig:
                 Whether to use JSON format for logs. Defaults to False.
         """
 
+    @staticmethod
+    def json_default() -> "LoggingConfig":
+        """Gets a default JSON configuration.
+
+        show_threads: True
+        log_level: Env or LogLevel.Info
+        write_level: WriteLevel.Stdout
+        use_json: True
+
+        Returns:
+            LoggingConfig:
+                The default JSON configuration.
+        """
+
+    @staticmethod
+    def default() -> "LoggingConfig":
+        """Gets a default configuration.
+
+        show_threads: True
+        log_level: Env or LogLevel.Info
+        write_level: WriteLevel.Stdout
+        use_json: False
+
+        Returns:
+            LoggingConfig:
+                The default JSON configuration.
+        """
+
 class RustyLogger:
     """The Rusty Logger class to use with your python and rust-backed projects."""
 
