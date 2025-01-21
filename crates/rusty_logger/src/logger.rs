@@ -126,7 +126,7 @@ pub fn setup_logging(config: &LoggingConfig) -> Result<(), LoggingError> {
 }
 
 #[pyclass]
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LoggingConfig {
     #[pyo3(get, set)]
     show_threads: bool,
