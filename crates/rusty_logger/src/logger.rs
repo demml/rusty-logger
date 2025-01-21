@@ -271,3 +271,13 @@ impl RustyLogger {
         tracing::trace!(msg);
     }
 }
+
+impl RustyLogger {
+    pub fn setup(config: Option<&LoggingConfig>) -> Result<(), LoggingError> {
+        let default_config = LoggingConfig::default();
+        let config = config.unwrap_or(&default_config);
+        let _ = setup_logging(&config).is_ok();
+
+        Ok(())
+    }
+}
