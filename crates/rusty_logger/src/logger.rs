@@ -24,7 +24,7 @@ impl FromStr for LogLevel {
     type Err = LoggingError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
+        match s.to_lowercase().as_str() {
             "debug" => Ok(LogLevel::Debug),
             "info" => Ok(LogLevel::Info),
             "warn" => Ok(LogLevel::Warn),
@@ -156,10 +156,10 @@ impl LoggingConfig {
         let write_level = write_level.unwrap_or(WriteLevel::Stdout);
         let use_json = use_json.unwrap_or(false);
 
-        let log_level = std::env::var("LOG_LEVEL").map_or_else(
-            |_| log_level.unwrap_or(LogLevel::Info),
+        let log_level = log_level.unwrap_or(std::env::var("LOG_LEVEL").map_or_else(
+            |_| LogLevel::Info,
             |x| LogLevel::from_str(&x).unwrap_or(LogLevel::Info),
-        );
+        ));
 
         LoggingConfig {
             show_threads,
@@ -182,6 +182,28 @@ impl LoggingConfig {
 }
 
 impl LoggingConfig {
+    /// Create a new LoggingConfig with the given parameters when using within Rust
+    ///
+    /// # Arguments
+    ///
+    /// * `show_threads` - Whether to show thread ids in logs
+    /// * `log_level` - The log level to use
+    /// * `write_level` - The write level to use
+    /// * `use_json` - Whether to use json format for logs
+    ///
+    pub fn rust_new(
+        show_threads: bool,
+        log_level: LogLevel,
+        write_level: WriteLevel,
+        use_json: bool,
+    ) -> Self {
+        LoggingConfig {
+            show_threads,
+            log_level,
+            write_level,
+            use_json,
+        }
+    }
     fn time_format(
         &self,
     ) -> Result<UtcTime<Vec<time::format_description::FormatItem<'static>>>, LoggingError> {
