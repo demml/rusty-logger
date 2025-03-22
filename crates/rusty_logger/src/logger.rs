@@ -24,7 +24,7 @@ impl FromStr for LogLevel {
     type Err = LoggingError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
+        match s.to_lowercase().as_str() {
             "debug" => Ok(LogLevel::Debug),
             "info" => Ok(LogLevel::Info),
             "warn" => Ok(LogLevel::Warn),
@@ -75,7 +75,7 @@ fn build_json_subscriber(
         .json()
         .with_target(false)
         .flatten_event(true)
-        .with_thread_ids(config.show_threads.clone())
+        .with_thread_ids(config.show_threads)
         .with_timer(config.time_format()?);
 
     if config.write_level == WriteLevel::Stderror {
@@ -94,7 +94,7 @@ fn build_subscriber(log_level: tracing::Level, config: &LoggingConfig) -> Result
     let sub = tracing_subscriber::fmt()
         .with_max_level(log_level)
         .with_target(false)
-        .with_thread_ids(config.show_threads.clone())
+        .with_thread_ids(config.show_threads)
         .with_timer(config.time_format()?);
 
     if config.write_level == WriteLevel::Stderror {
@@ -119,14 +119,14 @@ pub fn setup_logging(config: &LoggingConfig) -> Result<(), LoggingError> {
     };
 
     if config.use_json {
-        return build_json_subscriber(display_level, config);
+        build_json_subscriber(display_level, config)
     } else {
-        return build_subscriber(display_level, config);
+        build_subscriber(display_level, config)
     }
 }
 
 #[pyclass]
-#[derive(Clone, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LoggingConfig {
     #[pyo3(get, set)]
     show_threads: bool,
@@ -152,9 +152,15 @@ impl LoggingConfig {
         use_json: Option<bool>,
     ) -> Self {
         let show_threads = show_threads.unwrap_or(true);
-        let log_level = log_level.unwrap_or(LogLevel::Info);
+
         let write_level = write_level.unwrap_or(WriteLevel::Stdout);
         let use_json = use_json.unwrap_or(false);
+
+        let log_level = log_level.unwrap_or(std::env::var("LOG_LEVEL").map_or_else(
+            |_| LogLevel::Info,
+            |x| LogLevel::from_str(&x).unwrap_or(LogLevel::Info),
+        ));
+
         LoggingConfig {
             show_threads,
             log_level,
@@ -162,9 +168,42 @@ impl LoggingConfig {
             use_json,
         }
     }
+
+    #[staticmethod]
+    pub fn json_default() -> Self {
+        LoggingConfig::new(Some(true), None, None, Some(true))
+    }
+
+    #[staticmethod]
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> Self {
+        LoggingConfig::new(Some(true), None, None, None)
+    }
 }
 
 impl LoggingConfig {
+    /// Create a new LoggingConfig with the given parameters when using within Rust
+    ///
+    /// # Arguments
+    ///
+    /// * `show_threads` - Whether to show thread ids in logs
+    /// * `log_level` - The log level to use
+    /// * `write_level` - The write level to use
+    /// * `use_json` - Whether to use json format for logs
+    ///
+    pub fn rust_new(
+        show_threads: bool,
+        log_level: LogLevel,
+        write_level: WriteLevel,
+        use_json: bool,
+    ) -> Self {
+        LoggingConfig {
+            show_threads,
+            log_level,
+            write_level,
+            use_json,
+        }
+    }
     fn time_format(
         &self,
     ) -> Result<UtcTime<Vec<time::format_description::FormatItem<'static>>>, LoggingError> {
@@ -252,5 +291,15 @@ impl RustyLogger {
             None => message.to_string(),
         };
         tracing::trace!(msg);
+    }
+}
+
+impl RustyLogger {
+    pub fn setup(config: Option<&LoggingConfig>) -> Result<(), LoggingError> {
+        let default_config = LoggingConfig::default();
+        let config = config.unwrap_or(&default_config);
+        let _ = setup_logging(&config).is_ok();
+
+        Ok(())
     }
 }
